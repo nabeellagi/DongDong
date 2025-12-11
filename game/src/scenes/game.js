@@ -4,7 +4,7 @@ import { gsap } from "gsap";
 /**
  * Main game loop.
  * @function registerGame
- * @description register the game function.
+ * @description register the game scene.
  */
 
 export function registerGame(){

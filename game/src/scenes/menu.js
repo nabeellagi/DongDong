@@ -16,12 +16,6 @@ import { particleTouch } from "../utils/particleTouch";
 
 export function registerMenu() {
   k.scene("menu", () => {
-    // Particle Touch Effect
-    k.onMousePress((pos) => {
-      const mousePosition = k.mousePos();
-      particleTouch(mousePosition.x, mousePosition.y);
-    });
-    
     // Load assets
     const assets = {
       arcadeframe: "/menu/arcadeframe.png",
@@ -33,9 +27,22 @@ export function registerMenu() {
       start: "/menu/Start.png",
       tutorial: "/menu/Tutorial.png",
       credits: "/menu/Credits.png",
-      checker: "/menu/checker1.png"
+      checker: "/menu/checker1.png",
     };
     loadAll(assets);
+
+    // Load sound
+    k.loadSound("click1", "/sfx/click1.ogg");
+
+    // Particle Touch Effect
+    k.onMousePress((pos) => {
+      const mousePosition = k.mousePos();
+      particleTouch(mousePosition.x, mousePosition.y);
+      // Audio
+      const clickSnd = k.play("click1", {
+        volume : 0.4,
+      })
+    });
 
     // Set background
     const bgwidth = 1620;
@@ -52,7 +59,6 @@ export function registerMenu() {
     const arcadeframe = k.add([
       k.sprite("arcadeframe"),
       k.scale(0.8),
-      // k.pos(1366/2, 768/2)
     ]);
     const arcadeglass = k.add([
       k.sprite("glasspattern"),
