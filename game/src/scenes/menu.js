@@ -1,6 +1,7 @@
 import { k } from "../core/kaplay";
 import { gsap } from "gsap";
 import { loadAll } from "../utils/loadAll";
+import { makeButton } from "../utils/makeButton";
 
 /**
  * Register menu scene
@@ -22,11 +23,22 @@ export function registerMenu() {
       n: "/menu/logo/n.png",
       g: "/menu/logo/g.png",
       glasspattern: "/menu/glasspattern.png",
+      start : "/menu/Start.png",
+      about : "/menu/About.png",
+      checker : "/menu/checker1.png"
     };
     loadAll(assets);
 
     // Set background
-    k.setBackground(246, 234, 193);
+    const bgwidth = 1620;
+    const bg1 = k.add([
+      k.sprite("checker"),
+      k.pos(0, 0),
+    ]);
+    const bg2 = k.add([
+      k.sprite("checker"),
+      k.pos(bgwidth, 0),
+    ]);
 
     // Frame
     const arcadeframe = k.add([
@@ -41,19 +53,58 @@ export function registerMenu() {
     ]);
 
     // Logo 1
-    const d1 = k.add([k.sprite("d"), k.scale(0.5), k.pos(190, 190)]);
-    const o1 = k.add([k.sprite("o"), k.scale(0.5), k.pos(250, 185)]);
-    const n1 = k.add([k.sprite("n"), k.scale(0.5), k.pos(300, 190)]);
-    const g1 = k.add([k.sprite("g"), k.scale(0.5), k.pos(360, 190)]);
+    const d1 = k.add([k.sprite("d"), k.scale(0.6), k.pos(200, 190)]);
+    const o1 = k.add([k.sprite("o"), k.scale(0.6), k.pos(270, 185)]);
+    const n1 = k.add([k.sprite("n"), k.scale(0.6), k.pos(330, 190)]);
+    const g1 = k.add([k.sprite("g"), k.scale(0.6), k.pos(400, 190)]);
     // Logo 2
-    const d2 = k.add([k.sprite("d"), k.scale(0.5), k.pos(310, 290)]);
-    const o2 = k.add([k.sprite("o"), k.scale(0.5), k.pos(370, 285)]);
-    const n2 = k.add([k.sprite("n"), k.scale(0.5), k.pos(420, 290)]);
-    const g2 = k.add([k.sprite("g"), k.scale(0.5), k.pos(480, 290)]);
+    const d2 = k.add([k.sprite("d"), k.scale(0.6), k.pos(330, 290)]);
+    const o2 = k.add([k.sprite("o"), k.scale(0.6), k.pos(400, 285)]);
+    const n2 = k.add([k.sprite("n"), k.scale(0.6), k.pos(460, 290)]);
+    const g2 = k.add([k.sprite("g"), k.scale(0.6), k.pos(530, 290)]);
     const letters = [d1, o1, n1, g1, d2, o2, n2, g2];
     letters.forEach((letter, i) => {
-      gsap.delayedCall(i * 0.1, () => bounce(letter));
+      gsap.delayedCall(i * 0.15, () => bounce(letter));
     });
+
+    /* ====== BUTTONS ========= */
+
+    // Play button
+    
+    const playButton = k.add([
+      k.sprite("start"),
+      k.scale(0.5),
+      k.pos(932, 170),
+      k.area()
+    ]);
+    makeButton(playButton);
+
+    // About button
+    const aboutButton = k.add([
+      k.sprite("about"),
+      k.scale(0.5),
+      k.pos(932, 280),
+      k.area()
+    ]);
+    makeButton(aboutButton);
+    
+    // Update Loop
+    const speed = 60; // Bg scroll speed
+    k.onUpdate(()=>{
+      const dt = k.dt();
+
+      // Bg scroll loop
+      bg1.pos.x -= speed * dt;
+      bg2.pos.x -= speed * dt;
+
+      if(bg1.pos.x <= -bgwidth){
+        bg1.pos.x = bg2.pos.x + bgwidth;
+      }
+      if(bg2.pos.x <= -bgwidth){
+        bg2.pos.x = bg1.pos.x + bgwidth;
+      }
+    })
+
   });
 }
 
@@ -87,7 +138,7 @@ function bounce(obj) {
       duration: 0.23,
       ease: "power1.out",
     },
-    "-=0.15" // overlaps Step 2 for nicer impact
+    "-=0.55"
   );
 
   // Step 4, Return to normal shape

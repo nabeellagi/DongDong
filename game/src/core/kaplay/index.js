@@ -6,9 +6,15 @@ export const k = kaplay({
     crisp: true,
     pixelDensity: 1,
     width: 1366,
-    height: 768
+    height: 768,
+    // letterbox:true
 });
 
 // k.context.imageSmoothingEnabled = false;
 k.canvas.style.imageRendering = "pixelated";
 k.canvas.style.imageRendering = "crisp-edges";
+
+// Load font
+k.loadFont("steve", "fonts/Steve.ttf");
+
+// Mouse
