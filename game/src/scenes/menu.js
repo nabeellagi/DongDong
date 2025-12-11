@@ -31,7 +31,8 @@ export function registerMenu() {
       g: "/menu/logo/g.png",
       glasspattern: "/menu/glasspattern.png",
       start: "/menu/Start.png",
-      about: "/menu/About.png",
+      tutorial: "/menu/Tutorial.png",
+      credits: "/menu/Credits.png",
       checker: "/menu/checker1.png"
     };
     loadAll(assets);
@@ -86,14 +87,23 @@ export function registerMenu() {
     ]);
     makeButton(playButton);
 
-    // About button
-    const aboutButton = k.add([
-      k.sprite("about"),
+    // Tutorial button
+    const tutorialButton = k.add([
+      k.sprite("tutorial"),
       k.scale(0.5),
-      k.pos(932, 280),
+      k.pos(890, 280),
       k.area()
     ]);
-    makeButton(aboutButton);
+    makeButton(tutorialButton);
+
+    // Credit button
+    const creditsButton = k.add([
+      k.sprite("credits"),
+      k.scale(0.5),
+      k.pos(932, 390),
+      k.area()
+    ]);
+    makeButton(creditsButton);
 
     // Update Loop
     const speed = 60; // Bg scroll speed
