@@ -1,11 +1,11 @@
+import gsap from "gsap";
+
 /**
  * @function makeButton
  * @description To add button like charateristics to Kaplay sprite.
  * @param {GameObj} obj - Kaplay game object!
  * @param {*} onPress - function to call when the button is pressed
  */
-
-import gsap from "gsap";
 
 export function makeButton(obj, onPress) {
     const baseScaleX = obj.scale.x;

@@ -2,6 +2,7 @@ import { k } from "../core/kaplay";
 import { gsap } from "gsap";
 import { loadAll } from "../utils/loadAll";
 import { makeButton } from "../utils/makeButton";
+import { particleTouch } from "../utils/particleTouch";
 
 /**
  * Register menu scene
@@ -15,6 +16,12 @@ import { makeButton } from "../utils/makeButton";
 
 export function registerMenu() {
   k.scene("menu", () => {
+    // Particle Touch Effect
+    k.onMousePress((pos) => {
+      const mousePosition = k.mousePos();
+      particleTouch(mousePosition.x, mousePosition.y);
+    });
+    
     // Load assets
     const assets = {
       arcadeframe: "/menu/arcadeframe.png",
@@ -23,9 +30,9 @@ export function registerMenu() {
       n: "/menu/logo/n.png",
       g: "/menu/logo/g.png",
       glasspattern: "/menu/glasspattern.png",
-      start : "/menu/Start.png",
-      about : "/menu/About.png",
-      checker : "/menu/checker1.png"
+      start: "/menu/Start.png",
+      about: "/menu/About.png",
+      checker: "/menu/checker1.png"
     };
     loadAll(assets);
 
@@ -70,7 +77,7 @@ export function registerMenu() {
     /* ====== BUTTONS ========= */
 
     // Play button
-    
+
     const playButton = k.add([
       k.sprite("start"),
       k.scale(0.5),
@@ -87,20 +94,20 @@ export function registerMenu() {
       k.area()
     ]);
     makeButton(aboutButton);
-    
+
     // Update Loop
     const speed = 60; // Bg scroll speed
-    k.onUpdate(()=>{
+    k.onUpdate(() => {
       const dt = k.dt();
 
       // Bg scroll loop
       bg1.pos.x -= speed * dt;
       bg2.pos.x -= speed * dt;
 
-      if(bg1.pos.x <= -bgwidth){
+      if (bg1.pos.x <= -bgwidth) {
         bg1.pos.x = bg2.pos.x + bgwidth;
       }
-      if(bg2.pos.x <= -bgwidth){
+      if (bg2.pos.x <= -bgwidth) {
         bg2.pos.x = bg1.pos.x + bgwidth;
       }
     })
