@@ -92,7 +92,9 @@ export function registerMenu() {
       k.pos(932, 170),
       k.area()
     ]);
-    makeButton(playButton);
+    makeButton(playButton, () => {
+      k.go("game")
+    });
 
     // Tutorial button
     const tutorialButton = k.add([

@@ -2,7 +2,7 @@ import { k } from "../core/kaplay";
 
 /**
  * @function loadAll
- * @description loading assets for a scene at once.
+ * @description loading sprite assets for a scene at once.
  * @param {Object<string, string>} assets - spriteName : filePath
  * @example
  * loadAll({
