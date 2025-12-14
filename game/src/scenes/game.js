@@ -181,7 +181,7 @@ export function registerGame() {
             duration: 0.5,
             cooldown: 12,
             paddleOffset: 80,
-            maxBallSpeed: 1600, // only during burst
+            maxBallSpeed: 3000, // only during burst
         };
 
         // AI properties
@@ -268,14 +268,25 @@ export function registerGame() {
                 k.shake(gameBall.vel.len() / 200);
             };
 
-            // Clamp ball speed
-            const normalMaxSpeed = 900;
-            const burstMaxSpeed = burstConfig.maxBallSpeed;
-
-            const currenntMaxSpeed = playerBurst.active ? burstMaxSpeed : normalMaxSpeed;
-
+            // ==== BALL SPEED ====
+            const normalMaxSpeed = 800;
             const ballSpeed = gameBall.vel.len();
-            if(ballSpeed > currenntMaxSpeed) gameBall.vel = gameBall.vel.unit().scale(currenntMaxSpeed);
+            let currentMaxSpeed = normalMaxSpeed;
+
+            if (gameBall.justBurst) {
+                currentMaxSpeed = burstConfig.maxBallSpeed; // Burst the ball
+            }
+
+            if (ballSpeed > currentMaxSpeed) {
+                gameBall.vel = gameBall.vel.unit().scale(currentMaxSpeed);
+            }
+
+            if (gameBall.justBurst) {
+                gameBall.burstTimer -= dt;
+                if (gameBall.burstTimer <= 0) {
+                    gameBall.justBurst = false;
+                }
+            }
 
             // const maxBallSpeed = 900;
             // const ballSpeed = gameBall.vel.len();
@@ -358,7 +369,7 @@ export function registerGame() {
             // Kill previous tweens (important)
             gsap.killTweensOf(playerPaddle.pos);
 
-            // === SPRING DASH FORWARD ===
+            // ==== SPRING DASH FORWARD ====
             gsap.timeline()
                 .to(playerPaddle.pos, {
                     x: burstX + 14, // overshoot
@@ -371,7 +382,7 @@ export function registerGame() {
                     ease: "elastic.out(1, 0.4)",
                 });
 
-            // === END BURST ===
+            // ==== END BURST ====
             k.wait(burstConfig.duration, () => {
                 playerBurst.active = false;
                 // Springy return
@@ -382,7 +393,7 @@ export function registerGame() {
                 });
             });
 
-            // === COOLDOWN ===
+            // ==== COOLDOWN ====
             k.wait(burstConfig.cooldown, () => {
                 playerBurst.cooldown = false;
             });
@@ -395,9 +406,20 @@ export function registerGame() {
 
         // Paddle collide
         gameBall.onCollide("playerPaddle", () => {
+            // BURST COLLIDE
             if (playerBurst.active) {
-                gameBall.vel.x *= -5;
-                gameBall.vel.y *= 3;
+                const dir = Math.sign(gameBall.vel.x) || 1;
+
+                const angle = k.rand(-0.5, 0.5);
+                const speed = burstConfig.maxBallSpeed;
+
+                gameBall.vel = k.vec2(
+                    -dir * speed,
+                    speed * angle
+                );
+
+                gameBall.justBurst = true;
+                gameBall.burstTimer = 0.25;
             }
             else {
                 gameBall.vel.x *= k.rand(-1.25, -1.02);
@@ -413,3 +435,8 @@ export function registerGame() {
 
     });
 }
+
+/**
+/**
+
+*/

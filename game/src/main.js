@@ -6,5 +6,5 @@ import { registerMenu } from "./scenes/menu";
 registerMenu();
 registerGame();
 
-// k.go('menu');
-k.go('game')
+k.go('menu');
+// k.go('game')
