@@ -3,6 +3,7 @@ import { gsap } from "gsap";
 import { loadAll } from "../utils/loadAll";
 import { paddle } from "../objects/paddle";
 import { ball } from "../objects/ball";
+import { particleTouch } from "../utils/particleTouch";
 
 /**
  * Main game loop.
@@ -20,19 +21,18 @@ export function registerGame() {
         let countdown = 3;
         const countdownText = k.add([
             k.text(countdown.toString(), {
-                size: 104,
+                size: 105,
                 font: "steve"
             }),
             k.pos(k.width() / 2, k.height() / 2 - 100),
             k.anchor("center"),
             k.z(100),
-            k.color("#d43519"),
-            k.scale(1)
+            k.scale(1),
+            k.opacity(1)
         ]);
-        const animateCountdown = (value, color = "#d43519") => {
+        const animateCountdown = (value, color = k.rgb(212, 53, 25)) => {
             countdownText.text = value;
             countdownText.color = color;
-
             gsap.killTweensOf(countdownText);
             gsap.killTweensOf(countdownText.scale);
 
@@ -41,14 +41,14 @@ export function registerGame() {
             countdownText.scale.y = 0.2;
 
             gsap.to(countdownText, {
-                opacity : 1,
+                opacity: 1,
                 duration: 0.15,
-                ease : "power2.out"
+                ease: "power2.out"
             });
             gsap.to(countdownText.scale, {
-                x:1,
-                y:1,
-                duration : 0.45,
+                x: 1,
+                y: 1,
+                duration: 0.45,
                 ease: "back.out(3)"
             });
         };
@@ -56,13 +56,13 @@ export function registerGame() {
             animateCountdown("3");
             k.wait(1, () => animateCountdown("2"));
             k.wait(2, () => animateCountdown("1"));
-            k.wait(3, () => animateCountdown("GO", "#2ecc71"));
+            k.wait(3, () => animateCountdown("GO", k.rgb(46, 204, 113)));
 
             k.wait(3.8, () => {
                 gsap.to(countdownText, {
-                    opacity : 0,
-                    duration : 0.3,
-                    onComplete : () =>{
+                    opacity: 0,
+                    duration: 0.3,
+                    onComplete: () => {
                         countdownText.destroy();
                         gameState = "play";
                     }
@@ -96,6 +96,53 @@ export function registerGame() {
         // Set ball
         const gameBall = ball(k.width() / 2, k.height() / 2);
 
+        // SCORE SYSTEM
+        let score = {
+            player : 0,
+            opp :0,
+            isScoring : false
+        };
+        
+        const scoreColor = {
+            player : k.rgb(212, 53, 25),
+            opp : k.rgb(212, 53, 25)
+        };
+
+        const scoreText = {
+            player : k.add([
+                k.text("0", {
+                    size : 64,
+                    font : "steve"
+                }),
+                k.pos(k.width() / 2 - 120, 60),
+                k.anchor("center"),
+                k.color(scoreColor.player),
+                k.scale(1)
+            ]),
+            opp : k.add([
+                k.text("0", {
+                    size : 64,
+                    font : "steve"
+                }),
+                k.pos(k.width() / 2 + 110, 60),
+                k.anchor("center"),
+                k.color(scoreColor.opp),
+                k.scale(1)
+            ])
+        };
+
+        const popScore = (textObj) =>{
+            gsap.fromTo(textObj.scale, 
+                { x : 0.6, y: 0.6 },
+                {
+                    x : 1,
+                    y : 1,
+                    duration : 0.4,
+                    ease : "back.out(3)"
+                }
+            )
+        };
+
         // ===== UPDATE LOOP ======
 
         //Background scroll vars
@@ -105,20 +152,20 @@ export function registerGame() {
 
         // Paddle movement properties
         const paddleMove = {
-            accel: 850,
-            maxSpeed: 320,
-            friction: 260
+            accel: 1500,
+            maxSpeed: 420,
+            friction: 280
         };
 
         // AI properties
         const ai = {
-            reactionDelay: 0.3,
+            reactionDelay: 0.2,
             maxSpeed: 320,
-            accel: 850,
+            accel: 1050,
             friction: 260,
-            aimError: 80,
+            aimError: 40,
             deadZone: 25,
-            missChance: 0.2
+            missChance: 0.15
         }
         let aiTimer = 0;
         let aiTargetY = k.height() / 2;
@@ -179,12 +226,23 @@ export function registerGame() {
             // Bounce to wall
             if (gameBall.pos.y <= gameBall.radius) {
                 gameBall.pos.y = gameBall.radius;
-                gameBall.vel.y *= -1;
-            }
+                gameBall.vel.y *= k.rand(-1.25, -1.02);
+                gameBall.vel.y += k.rand(-40, 40);
+
+                k.shake(gameBall.vel.len() / 200);
+            };
             if (gameBall.pos.y >= k.height() - gameBall.radius) {
                 gameBall.pos.y = k.height() - gameBall.radius;
-                gameBall.vel.y *= -1;
-            }
+                gameBall.vel.y *= k.rand(-1.25, -1.02);
+                gameBall.vel.y += k.rand(-40, 40);
+
+                k.shake(gameBall.vel.len() / 200);
+            };
+
+            // Clamp ball speed
+            const maxBallSpeed = 900;
+            const ballSpeed = gameBall.vel.len();
+            if(ballSpeed > maxBallSpeed) gameBall.vel = gameBall.vel.unit().scale(maxBallSpeed);
 
             // Reset Ball
             const limit = 200;
@@ -192,7 +250,7 @@ export function registerGame() {
                 gameBall.pos = k.vec2(k.width() / 2, k.height() / 2);
                 gameBall.vel = k.vec2(
                     k.choose([1, -1]) * 500,
-                    k.rand(-200, 200)
+                    k.rand(-100, 100)
                 );
             };
 
@@ -242,18 +300,16 @@ export function registerGame() {
         });
         // Paddle collide
         gameBall.onCollide("playerPaddle", () => {
-            gameBall.vel.x *= -1;
-
+            gameBall.vel.x *= k.rand(-1.25, -1.02);
             gameBall.vel.y += playerPaddle.velY * 0.4;
+            particleTouch(gameBall.pos.x, gameBall.pos.y);
+
         });
         gameBall.onCollide("oppPaddle", () => {
-            gameBall.vel.x *= -1;
+            gameBall.vel.x *= k.rand(-1.25, -1.02);
             gameBall.vel.y += oppPaddle.velY * 0.4;
+            particleTouch(gameBall.pos.x, gameBall.pos.y);
         });
 
     });
 }
-
-/**
-
-*/

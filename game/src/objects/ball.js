@@ -16,6 +16,7 @@ export function ball(x, y) {
     k.anchor("center"),
     {
         vel: k.vec2(500, 200)
-    }
+    },
+    "ball"
     ])
 }
