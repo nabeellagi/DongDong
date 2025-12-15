@@ -4,6 +4,8 @@ import { loadAll } from "../utils/loadAll";
 import { paddle } from "../objects/paddle";
 import { ball } from "../objects/ball";
 import { particleTouch } from "../utils/particleTouch";
+import { formatTime } from "../utils/formatTime";
+import { spawnTrail } from "../utils/spawnTrail";
 
 /**
  * Main game loop.
@@ -70,6 +72,26 @@ export function registerGame() {
             })
         };
         startCountdown();
+
+        // ===== GAME TIMER STATE =====
+        let matchTime = 6 * 60;
+        let isOvertime = false;
+        let overtimeCount = 0;
+        let matchEnded = false;
+
+        // Timer text
+        const timerText = k.add([
+            k.text(formatTime(matchTime), {
+                size: 48,
+                font: "steve"
+            }),
+            k.pos(k.width() / 2, 110),
+            k.anchor("center"),
+            k.color(k.rgb(212, 53, 25)),
+            k.scale(1),
+            k.opacity(1),
+            k.z(99)
+        ]);
 
         // Load assets
         const assets = {
@@ -183,6 +205,8 @@ export function registerGame() {
             paddleOffset: 80,
             maxBallSpeed: 3000, // only during burst
         };
+        let trailTimer = 0;
+        const trailInterval = 0.025;
 
         // AI properties
         const ai = {
@@ -268,6 +292,18 @@ export function registerGame() {
                 k.shake(gameBall.vel.len() / 200);
             };
 
+            // ===== BURST TRAIL =====
+            if (gameBall.justBurst) {
+                trailTimer += dt;
+
+                if (trailTimer >= trailInterval) {
+                    trailTimer = 0;
+                    spawnTrail(gameBall.pos, undefined, 5, gameBall.vel);
+                }
+            } else {
+                trailTimer = 0;
+            }
+
             // ==== BALL SPEED ====
             const normalMaxSpeed = 800;
             const ballSpeed = gameBall.vel.len();
@@ -306,6 +342,58 @@ export function registerGame() {
                     popScore(scoreText.opp);
                     scoreText.opp.text = score.opp.toString();
                     resetBallWithDelay(1);
+                }
+            };
+
+            // ===== Match Timer =====
+            if (gameState === "play" && !matchEnded) {
+                matchTime -= dt;
+                if (matchTime < 0) matchTime = 0;
+
+                timerText.text = formatTime(matchTime);
+
+                // Tense 10 secs
+                if (matchTime <= 10 && matchTime > 0) {
+                    gsap.to(timerText.scale, {
+                        x: 1.15,
+                        y: 1.15,
+                        duration: 0.2,
+                        yoyo: true,
+                        repeat: 1,
+                        ease: "power2.out"
+                    });
+                    timerText.color = k.rgb(201, 13, 13);
+                };
+
+                // Time's Up!
+                if (matchTime === 0) {
+                    // Tie
+                    if (score.player === score.opp) {
+                        overtimeCount++;
+                        matchTime = 15; // Additional 15 secs
+                        timerText.color = k.rgb(241, 196, 15);
+                        gsap.fromTo(timerText.scale,
+                            {
+                                x: 0.5, y: 0.5
+                            },
+                            {
+                                x: 1, y: 1,
+                                duration: 0.6,
+                                ease: "elastic.out(1, 0.35)"
+                            }
+                        );
+                    } else { // MATCH ENDS!
+                        matchEnded = true;
+                        gameState = "end";
+
+                        k.wait(0.3, () => {
+                            if (score.player > score.opp) { // Player Win
+                                alert("win");
+                            } else { // Opp win
+                                alert("lose")
+                            }
+                        })
+                    }
                 }
             }
 
@@ -399,7 +487,7 @@ export function registerGame() {
             });
         };
 
-        k.onKeyPress("space", () => {
+        k.onKeyPress("right", () => {
             if (playerBurst.active || playerBurst.cooldown || gameState !== "play") return;
             activateBurst();
         });
