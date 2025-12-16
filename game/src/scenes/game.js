@@ -221,6 +221,48 @@ export function registerGame() {
         let aiTimer = 0;
         let aiTargetY = k.height() / 2;
 
+        // AI BURST SET UP
+        let aiBurst = {
+            active: false,
+            cooldown: false,
+            rolled : false
+        };
+
+        const activateAIBurst = () => {
+            aiBurst.active = true;
+            aiBurst.cooldown = true;
+
+            const baseX = oppPaddle.pos.x;
+            const burstX = baseX - burstConfig.paddleOffset;
+
+            gsap.killTweensOf(oppPaddle.pos);
+
+            gsap.timeline()
+                .to(oppPaddle.pos, {
+                    x: burstX - 14,
+                    duration: 0.14,
+                    ease: "power4.out"
+                })
+                .to(oppPaddle.pos, {
+                    x: burstX,
+                    duration: 0.18,
+                    ease: "elastic.out(1, 0.4)",
+                });
+
+            k.wait(burstConfig.duration, () => {
+                aiBurst.active = false;
+                gsap.to(oppPaddle.pos, {
+                    x: baseX,
+                    duration: 0.5,
+                    ease: "elastic.out(1, 0.35)"
+                })
+            });
+
+            k.wait(burstConfig.cooldown, () => {
+                aiBurst.cooldown = false;
+            });
+        }
+
         // AI PREDICT FUNC
         const predictBallY = (ball, targetX) => {
             const time = (targetX - ball.pos.x) / ball.vel.x;
@@ -440,9 +482,44 @@ export function registerGame() {
                 oppPaddle.height / 2,
                 k.height() - oppPaddle.height / 2
             );
+
+            // ==== AI BURST DECISION ====
+            if(gameBall.vel.x <= 0){
+                aiBurst.rolled = false; // prevent generating random numbers too much
+            }
+            if (
+                !aiBurst.active &&
+                !aiBurst.cooldown &&
+                gameBall.vel.x > 0 && // ball moving toward AI
+                !aiBurst.rolled
+            ) {
+                const predictedY = predictBallY(gameBall, oppPaddle.pos.x);
+                if (predictedY !== null) {
+                    const yDiff = Math.abs(predictedY - oppPaddle.pos.y);
+
+                    // how soon ball reaches AI
+                    const timeToReach = (oppPaddle.pos.x - gameBall.pos.x) / gameBall.vel.x;
+
+                    const burstChance = 0.05;
+                    const chance = Math.random();
+                    k.debug.log(chance);
+                    if (
+                        yDiff < 40 &&             // precise vertical alignment
+                        timeToReach > 0 &&
+                        timeToReach < 0.45 &&     // tight timing window
+                        chance < burstChance    // randomness (tune this)
+                    ) {
+                        aiBurst.rolled = true;
+                        k.debug.log(chance);
+                        activateAIBurst();
+                    }
+                }
+            }
+
         });
 
-        // Burst move
+        // ===== BURST ====
+        // Player Burst move
         let playerBurst = {
             active: false,
             cooldown: false
@@ -501,8 +578,11 @@ export function registerGame() {
                 const angle = k.rand(-0.5, 0.5);
                 const speed = burstConfig.maxBallSpeed;
 
+                const paddleEdgeX = playerPaddle.pos.x + playerPaddle.width / 2 + gameBall.radius + 2;
+                gameBall.pos.x = paddleEdgeX;
+
                 gameBall.vel = k.vec2(
-                    -dir * speed,
+                    Math.abs(speed),
                     speed * angle
                 );
 
@@ -516,10 +596,36 @@ export function registerGame() {
             particleTouch(gameBall.pos.x, gameBall.pos.y);
         });
         gameBall.onCollide("oppPaddle", () => {
-            gameBall.vel.x *= k.rand(-1.25, -1.02);
-            gameBall.vel.y += oppPaddle.velY * 0.35;
+            if (aiBurst.active) {
+                const angle = k.rand(-0.45, 0.45);
+                const speed = burstConfig.maxBallSpeed;
+
+                const paddleEdgeX =
+                    oppPaddle.pos.x - oppPaddle.width / 2 - gameBall.radius - 2;
+
+                gameBall.pos.x = paddleEdgeX;
+
+                gameBall.vel = k.vec2(
+                    -Math.abs(speed),
+                    speed * angle
+                );
+
+                gameBall.justBurst = true;
+                gameBall.burstTimer = 0.25;
+            } else {
+                gameBall.vel.x *= k.rand(-1.25, -1.02);
+                gameBall.vel.y += oppPaddle.velY * 0.35;
+            }
+
             particleTouch(gameBall.pos.x, gameBall.pos.y);
         });
 
+
     });
 }
+
+/**
+To do 
+1. score screen
+2. Pause
+*/

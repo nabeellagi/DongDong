@@ -7,7 +7,7 @@ export function spawnTrail(
     life = 5,
     vel = k.vec2(1, 0)
 ) {
-    const angle = Math.atan2(vel.y, vel.x);
+    const angle = Math.atan2(-vel.y, -vel.x);
 
     const trail = k.add([
         k.rect(22, 4),

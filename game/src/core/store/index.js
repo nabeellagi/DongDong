@@ -1,16 +1,16 @@
-import { create } from "zustand";
+// import { create } from "zustand";
 
-export const useGame = create((set, get) => ({
-    gravity : 300,
-    ballCount : 1,
+// export const useGame = create((set, get) => ({
+//     gravity : 300,
+//     ballCount : 1,
 
-    powerUps : [],
+//     powerUps : [],
 
-    // methods
-    setGravity : (g) => set({ gravity : g }),
+//     // methods
+//     setGravity : (g) => set({ gravity : g }),
 
-}))
+// }))
 
-/**
+// /**
 
-*/
+// */
