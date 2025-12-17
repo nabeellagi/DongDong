@@ -93,7 +93,17 @@ export function registerGame() {
             k.z(99)
         ]);
 
-        // Load assets
+        // ===== PACE UP =====
+        let paceLevel = 0;
+        const paceInterval = 60;
+        let nextPaceTime = matchTime - paceInterval;
+        let paceAnnounced = false;
+        // Pace multipliers
+        let paddleSizeMul = 1;
+        let paddleSpeedMul = 1;
+        let aiSpeedMul = 1;
+
+        // ===== LOAD ASSETS =====
         const assets = {
             brick: "/game/brick1.png"
         }
@@ -184,6 +194,73 @@ export function registerGame() {
             })
         };
 
+
+        // ==== PACE UP =====
+
+        // Pace Text
+        const paceText = k.add([
+            k.text("PACE UP!", {
+                size: 120,
+                font: "steve",
+            }),
+            k.pos(k.width() / 2, k.height() / 2),
+            k.anchor("center"),
+            k.color(k.rgb(200, 20, 245)),
+            k.scale(0),
+            k.opacity(0),
+            k.z(200)
+        ]);
+        // Anim pace text
+
+        const paceUp = {
+            show: () => {
+                gsap.killTweensOf(paceText);
+
+                paceText.opacity = 1;
+                paceText.scale.x = 0.2;
+                paceText.scale.y = 0.2;
+                paceText.pos.y = k.height() / 2;
+
+                gsap.timeline()
+                    // Appear n bounce
+                    .to(paceText.scale, {
+                        x: 1.25,
+                        y: 1.25,
+                        duration: 0.35,
+                        ease: "back.out(3)"
+                    })
+                    .to(paceText.scale, {
+                        x: 1,
+                        y: 1,
+                        duration: 0.4,
+                        ease: "power2.out"
+                    })
+                    // fall
+                    .to(paceText.pos, {
+                        y: k.height() + 200,
+                        duration: 0.7,
+                        ease: "power3.in"
+                    })
+                    // fade during fall ig
+                    .to(paceText, {
+                        opacity: 0,
+                        duration: 0.35,
+                        ease: "power2.out"
+                    })
+            },
+            apply: () => {
+                paceLevel++;
+
+                paddleSizeMul *= 0.9;
+
+                paddleSpeedMul += 0.12;
+                aiSpeedMul += 0.12;
+
+                playerPaddle.scale.y = paddleSizeMul;
+                oppPaddle.scale.y = paddleSizeMul;
+            }
+        }
+
         // ===== UPDATE LOOP ======
 
         //Background scroll vars
@@ -216,7 +293,7 @@ export function registerGame() {
             friction: 260,
             aimError: 30,
             deadZone: 25,
-            missChance: 0.15
+            missChance: 0.3
         }
         let aiTimer = 0;
         let aiTargetY = k.height() / 2;
@@ -225,7 +302,7 @@ export function registerGame() {
         let aiBurst = {
             active: false,
             cooldown: false,
-            rolled : false
+            rolled: false
         };
 
         const activateAIBurst = () => {
@@ -286,26 +363,28 @@ export function registerGame() {
 
             // ==== PlayerPaddle move =====
 
+            const frictionMul = Math.sqrt(paddleSpeedMul); // Pace friction
+
             // Acceleration Input
             if (k.isKeyDown("up") || k.isKeyDown("w")) {
-                playerPaddle.velY -= paddleMove.accel * dt;
+                playerPaddle.velY -= paddleMove.accel * paddleSpeedMul * dt;
             } else if (k.isKeyDown("down") || k.isKeyDown("s")) {
-                playerPaddle.velY += paddleMove.accel * dt;
+                playerPaddle.velY += paddleMove.accel * paddleSpeedMul * dt;
             }
             else {
                 // Deceleration
                 if (playerPaddle.velY > 0) {
-                    playerPaddle.velY -= paddleMove.friction * dt;
+                    playerPaddle.velY -= paddleMove.friction * frictionMul * dt;
                     if (playerPaddle.velY < 0) playerPaddle.velY = 0;
                 } else if (playerPaddle.velY < 0) {
-                    playerPaddle.velY += paddleMove.friction * dt;
+                    playerPaddle.velY += paddleMove.friction * frictionMul * dt;
                     if (playerPaddle.velY > 0) playerPaddle.velY = 0;
                 }
             }
             // Apply Movement
             playerPaddle.pos.y += playerPaddle.velY * dt;
             // Limit MaxSpeed
-            playerPaddle.velY = k.clamp(playerPaddle.velY, -paddleMove.maxSpeed, paddleMove.maxSpeed);
+            playerPaddle.velY = k.clamp(playerPaddle.velY, -paddleMove.maxSpeed * paddleSpeedMul, paddleMove.maxSpeed * paddleSpeedMul);
             // Keep in screen
             playerPaddle.pos.y = k.clamp(
                 playerPaddle.pos.y,
@@ -394,6 +473,18 @@ export function registerGame() {
 
                 timerText.text = formatTime(matchTime);
 
+                // PACE TIMER
+
+                if (matchTime <= nextPaceTime + 2 && matchTime > nextPaceTime && !paceAnnounced) {
+                    paceAnnounced = true;
+                    paceUp.show();
+                }
+                if (matchTime <= nextPaceTime) {
+                    paceUp.apply();
+                    nextPaceTime -= paceInterval;
+                    paceAnnounced = false;
+                }
+
                 // Tense 10 secs
                 if (matchTime <= 10 && matchTime > 0) {
                     gsap.to(timerText.scale, {
@@ -458,22 +549,22 @@ export function registerGame() {
             const dy = aiTargetY - oppPaddle.pos.y;
             if (Math.abs(dy) > ai.deadZone) {
                 if (dy > 0) {
-                    oppPaddle.velY += ai.accel * dt;
+                    oppPaddle.velY += ai.accel * aiSpeedMul * dt;
                 } else {
-                    oppPaddle.velY -= ai.accel * dt;
+                    oppPaddle.velY -= ai.accel * aiSpeedMul * dt;
                 }
             } else {
                 // Friction
                 if (oppPaddle.velY > 0) {
-                    oppPaddle.velY -= ai.friction * dt;
+                    oppPaddle.velY -= ai.friction * frictionMul * dt;
                     if (oppPaddle.velY < 0) oppPaddle.velY = 0;
                 } else if (oppPaddle.velY < 0) {
-                    oppPaddle.velY -= ai.friction * dt;
+                    oppPaddle.velY -= ai.friction * frictionMul * dt;
                     if (oppPaddle.velY > 0) oppPaddle.velY = 0;
                 }
             }
             // Clamp speed
-            oppPaddle.velY = k.clamp(oppPaddle.velY, -ai.maxSpeed, ai.maxSpeed);
+            oppPaddle.velY = k.clamp(oppPaddle.velY, -ai.maxSpeed * aiSpeedMul, ai.maxSpeed * aiSpeedMul);
             // Apply movement
             oppPaddle.pos.y += oppPaddle.velY * dt;
             // Keep in screen
@@ -484,7 +575,7 @@ export function registerGame() {
             );
 
             // ==== AI BURST DECISION ====
-            if(gameBall.vel.x <= 0){
+            if (gameBall.vel.x <= 0) {
                 aiBurst.rolled = false; // prevent generating random numbers too much
             }
             if (
@@ -502,7 +593,7 @@ export function registerGame() {
 
                     const burstChance = 0.05;
                     const chance = Math.random();
-                    k.debug.log(chance);
+                    // k.debug.log(chance);
                     if (
                         yDiff < 40 &&             // precise vertical alignment
                         timeToReach > 0 &&
@@ -510,7 +601,7 @@ export function registerGame() {
                         chance < burstChance    // randomness (tune this)
                     ) {
                         aiBurst.rolled = true;
-                        k.debug.log(chance);
+                        // k.debug.log(chance);
                         activateAIBurst();
                     }
                 }
@@ -629,3 +720,7 @@ To do
 1. score screen
 2. Pause
 */
+
+/**
+
+ */
