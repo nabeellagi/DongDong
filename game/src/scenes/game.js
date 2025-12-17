@@ -6,6 +6,7 @@ import { ball } from "../objects/ball";
 import { particleTouch } from "../utils/particleTouch";
 import { formatTime } from "../utils/formatTime";
 import { spawnTrail } from "../utils/spawnTrail";
+import { pauseScreen } from "../utils/pauseScreen";
 
 /**
  * Main game loop.
@@ -18,6 +19,7 @@ export function registerGame() {
 
         // Game state
         let gameState = "countdown";
+        let pauseUI = null;
 
         // Countdown
         let countdown = 3;
@@ -105,7 +107,8 @@ export function registerGame() {
 
         // ===== LOAD ASSETS =====
         const assets = {
-            brick: "/game/brick1.png"
+            brick: "/game/brick1.png",
+            menu : "/menu/menu.png"
         }
         loadAll(assets);
 
@@ -711,16 +714,26 @@ export function registerGame() {
             particleTouch(gameBall.pos.x, gameBall.pos.y);
         });
 
+        // ===== PAUSE =====
+        k.onKeyPress('q', () => {
+            if(gameState === "play"){
+                gameState = "pause";
+
+                pauseUI = pauseScreen({
+                    onResume: () => {
+                        gameState = "play";
+                        pauseUI = null;
+                    },
+                    onExit: () => {
+                        k.go("menu");
+                    }
+                })
+            }else if(gameState === "pause"){
+                pauseUI?.destroy();
+                pauseUI = null;
+                gameState = "play";
+            }
+        })
 
     });
 }
-
-/**
-To do 
-1. score screen
-2. Pause
-*/
-
-/**
-
- */
