@@ -1,5 +1,6 @@
 import gsap from "gsap";
 import { k } from "../core/kaplay";
+import { makeButton } from "./makeButton";
 
 export function pauseScreen({
     onResume,
@@ -39,7 +40,8 @@ export function pauseScreen({
         k.pos(0, -20),
         k.anchor("center"),
         k.area(),
-        k.opacity(0)
+        k.opacity(0),
+        k.scale(1)
     ]);
 
     const exitBtn = box.add([
@@ -48,14 +50,15 @@ export function pauseScreen({
         k.anchor("center"),
         k.area(),
         k.opacity(0),
+        k.scale(1)
     ]);
 
-    resumeBtn.onClick(() => {
+    makeButton(resumeBtn, ()=>{
         close();
         onResume?.();
     });
 
-    exitBtn.onClick(() => {
+    makeButton(exitBtn, ()=>{
         onExit?.();
     });
 

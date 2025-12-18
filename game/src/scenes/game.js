@@ -7,6 +7,7 @@ import { particleTouch } from "../utils/particleTouch";
 import { formatTime } from "../utils/formatTime";
 import { spawnTrail } from "../utils/spawnTrail";
 import { pauseScreen } from "../utils/pauseScreen";
+import { theme } from "../core/data/theme";
 
 /**
  * Main game loop.
@@ -16,6 +17,10 @@ import { pauseScreen } from "../utils/pauseScreen";
 
 export function registerGame() {
     k.scene("game", () => {
+
+        // ===== THEME SELECT =====
+        // const currentTheme = theme[Math.floor(Math.random() * theme.length)];
+        const currentTheme = theme[1];
 
         // Game state
         let gameState = "countdown";
@@ -34,7 +39,7 @@ export function registerGame() {
             k.scale(1),
             k.opacity(1)
         ]);
-        const animateCountdown = (value, color = k.rgb(212, 53, 25)) => {
+        const animateCountdown = (value, color = currentTheme.color1) => {
             countdownText.text = value;
             countdownText.color = color;
             gsap.killTweensOf(countdownText);
@@ -89,7 +94,7 @@ export function registerGame() {
             }),
             k.pos(k.width() / 2, 110),
             k.anchor("center"),
-            k.color(k.rgb(212, 53, 25)),
+            k.color(currentTheme.color1),
             k.scale(1),
             k.opacity(1),
             k.z(99)
@@ -107,29 +112,36 @@ export function registerGame() {
 
         // ===== LOAD ASSETS =====
         const assets = {
+            // BACKGROUND
             brick: "/game/brick1.png",
-            menu : "/menu/menu.png"
+            brick2 : "/game/wave.png",
+
+            menu : "/menu/menu.png",
+
+            // PADDLE SKIN
+            capybara : "/sprites/paddleskin/c.png",
+            whale : "/sprites/paddleskin/w.png"
         }
         loadAll(assets);
 
         // Set background
-        const bgwidth = 1620;
+        const bgwidth = 1400;
         const bg1 = k.add([
-            k.sprite("brick"),
+            k.sprite(currentTheme.background),
             k.pos(0, 0),
 
         ]);
         const bg2 = k.add([
-            k.sprite("brick"),
+            k.sprite(currentTheme.background),
             k.pos(bgwidth, 0)
         ]);
 
         // Set Paddle
-        const playerPaddle = paddle(30, k.height() / 2, "playerPaddle");
-        const oppPaddle = paddle(1330, k.height() / 2, "oppPaddle");
+        const playerPaddle = paddle(30, k.height() / 2, currentTheme.paddleSprite, 1.5, "playerPaddle", );
+        const oppPaddle = paddle(1330, k.height() / 2, currentTheme.paddleSprite, 1.5, "oppPaddle");
 
         // Set ball
-        const gameBall = ball(k.width() / 2, k.height() / 2);
+        const gameBall = ball(k.width() / 2, k.height() / 2, currentTheme.color2);
 
         // ===== SCORE SYSTEM =====
         let score = {
@@ -139,8 +151,8 @@ export function registerGame() {
         };
 
         const scoreColor = {
-            player: k.rgb(212, 53, 25),
-            opp: k.rgb(212, 53, 25)
+            player: currentTheme.color1,
+            opp: currentTheme.color1
         };
 
         const scoreText = {

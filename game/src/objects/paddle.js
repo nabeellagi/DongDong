@@ -9,14 +9,15 @@ import { k } from "../core/kaplay";
  * @returns 
  */
 
-export function paddle(x, y, tag){
+export function paddle(x, y, img, scale=1, tag){
     return k.add([
-        k.rect(21, 140), // replace with sprite
-        k.color("#880C31"),
+        // k.rect(25, 150), // replace with sprite
+        // k.color("#880C31"),
+        k.sprite(img),
         k.pos(x, y),
         k.area(),
         k.anchor("center"),
-        k.scale(1),
+        k.scale(scale),
         tag,
         {
             velY : 0

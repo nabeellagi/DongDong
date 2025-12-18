@@ -8,10 +8,10 @@ import { k } from "../core/kaplay";
  * @returns 
  */
 
-export function ball(x, y) {
+export function ball(x, y, color) {
     return k.add([k.circle(15),
     k.pos(x, y),
-    k.color("#410a00"),
+    k.color(color),
     k.area(),
     k.anchor("center"),
     {
