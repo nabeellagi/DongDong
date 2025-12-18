@@ -129,6 +129,12 @@ export function registerGame() {
         }
         loadAll(assets);
 
+        k.loadSound("slap", "/sfx/slap.wav");
+        k.loadSound("heavyimpact", "/sfx/heavyimpact2.wav");
+        k.loadSound("whistle", "/sfx/whistle.mp3");
+        k.loadSound("bounce1", "/sfx/bounce1.mp3");
+        k.loadSound("shake", "/sfx/shake.mp3");
+
         // Set background
         const bgwidth = 1366;
         const bg1 = k.add([
@@ -272,7 +278,12 @@ export function registerGame() {
                         opacity: 0,
                         duration: 0.35,
                         ease: "power2.out"
-                    })
+                    });
+
+                    const whistle = k.play("whistle", {
+                        seek:1,
+                    });
+                    k.wait(0.8, ()=>whistle.stop());
             },
             apply: () => {
                 paceLevel++;
@@ -364,6 +375,11 @@ export function registerGame() {
             k.wait(burstConfig.cooldown, () => {
                 aiBurst.cooldown = false;
             });
+
+            k.play("heavyimpact", {
+                seek:0.4,
+                volume : 0.8
+            });
         }
 
         // AI PREDICT FUNC
@@ -430,6 +446,14 @@ export function registerGame() {
                 gameBall.vel.y += k.rand(-40, 40);
 
                 k.shake(gameBall.vel.len() / 200);
+                k.play("bounce1", {
+                    volume :  1.5,
+                    speed : k.rand(0.85, 1.2)
+                });
+                k.play("shake", {
+                    seek: 0.1,
+                    volume : 0.5
+                });
             };
             if (gameBall.pos.y >= k.height() - gameBall.radius) {
                 gameBall.pos.y = k.height() - gameBall.radius;
@@ -437,6 +461,14 @@ export function registerGame() {
                 gameBall.vel.y += k.rand(-40, 40);
 
                 k.shake(gameBall.vel.len() / 200);
+                k.play("bounce1", {
+                    volume : 1.5,
+                    speed : k.rand(0.85, 1.2)
+                });
+                k.play("shake", {
+                    seek : 0.1, 
+                    volume : 0.5
+                });
             };
 
             // ===== BURST TRAIL =====
@@ -679,6 +711,10 @@ export function registerGame() {
             k.wait(burstConfig.cooldown, () => {
                 playerBurst.cooldown = false;
             });
+            k.play("heavyimpact", {
+                seek : 0.4,
+                volume : 0.8
+            })
         };
 
         k.onKeyPress("right", () => {
@@ -711,6 +747,12 @@ export function registerGame() {
                 gameBall.vel.y += playerPaddle.velY * 0.35;
             }
             particleTouch(gameBall.pos.x, gameBall.pos.y);
+
+            k.play("slap", {
+                volume:0.6,
+                speed : k.rand(0.95, 1.1),
+                seek:0.001
+            });
         });
         gameBall.onCollide("oppPaddle", () => {
             if (aiBurst.active) {
@@ -735,6 +777,12 @@ export function registerGame() {
             }
 
             particleTouch(gameBall.pos.x, gameBall.pos.y);
+
+            k.play("slap", {
+                volume: 0.6, 
+                speed : k.rand(0.95, 1.1),
+                seek:0.001
+            });
         });
 
         // ===== PAUSE =====
