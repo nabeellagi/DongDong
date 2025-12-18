@@ -13,6 +13,8 @@ import { k } from "../core/kaplay";
 
 export function loadAll(assets){
     for (const [name, path] of Object.entries(assets)){
-        k.loadSprite(name, path)
+        k.loadSprite(name, path, {
+            nearest:true
+        })
     }
 }

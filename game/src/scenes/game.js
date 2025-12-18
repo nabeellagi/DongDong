@@ -19,8 +19,8 @@ export function registerGame() {
     k.scene("game", () => {
 
         // ===== THEME SELECT =====
-        // const currentTheme = theme[Math.floor(Math.random() * theme.length)];
-        const currentTheme = theme[1];
+        const currentTheme = theme[Math.floor(Math.random() * theme.length)];
+        // const currentTheme = theme[2];
 
         // Game state
         let gameState = "countdown";
@@ -114,31 +114,42 @@ export function registerGame() {
         const assets = {
             // BACKGROUND
             brick: "/game/brick1.png",
-            brick2 : "/game/wave.png",
+            wave : "/game/wave.png",
+            circ : "/game/circ.png",
+            sprink : "/game/sprink.png",
 
             menu : "/menu/menu.png",
 
             // PADDLE SKIN
             capybara : "/sprites/paddleskin/c.png",
-            whale : "/sprites/paddleskin/w.png"
+            whale : "/sprites/paddleskin/w.png",
+            frog : "/sprites/paddleskin/f.png",
+            axolotl : "/sprites/paddleskin/a.png",
+            
         }
         loadAll(assets);
 
         // Set background
-        const bgwidth = 1400;
+        const bgwidth = 1366;
         const bg1 = k.add([
+            k.fixed(),
             k.sprite(currentTheme.background),
             k.pos(0, 0),
 
         ]);
         const bg2 = k.add([
+            k.fixed(),
             k.sprite(currentTheme.background),
             k.pos(bgwidth, 0)
         ]);
 
         // Set Paddle
-        const playerPaddle = paddle(30, k.height() / 2, currentTheme.paddleSprite, 1.5, "playerPaddle", );
-        const oppPaddle = paddle(1330, k.height() / 2, currentTheme.paddleSprite, 1.5, "oppPaddle");
+        const playerPaddle = paddle(30, k.height() / 2, currentTheme.paddleSprite, 1, "playerPaddle", );
+        const oppPaddle = paddle(1330, k.height() / 2, currentTheme.paddleSprite, 1, "oppPaddle");
+        oppPaddle.flipX = true; // Flip texture for oppPaddle
+
+        playerPaddle.scale.x = 1.5;
+        oppPaddle.scale.x = 1.5;
 
         // Set ball
         const gameBall = ball(k.width() / 2, k.height() / 2, currentTheme.color2);
