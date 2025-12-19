@@ -17,25 +17,7 @@ import { collectThemeAssets } from "../utils/collectThemeAssets";
  */
 
 export function registerGame() {
-    k.scene("game", () => {
-
-        // ===== THEME SELECT =====
-        const currentTheme = theme[Math.floor(Math.random() * theme.length)];
-
-        // ===== LOAD ASSETS =====
-        const core_assets = {
-            menu: "/menu/menu.png",
-        }
-        loadAll(core_assets);
-        const assets = collectThemeAssets(currentTheme);
-        loadAll(assets);
-
-        k.loadSound("slap", "/sfx/slap.wav");
-        k.loadSound("heavyimpact", "/sfx/heavyimpact2.wav");
-        k.loadSound("whistle", "/sfx/whistle.mp3");
-        k.loadSound("bounce1", "/sfx/bounce1.mp3");
-        k.loadSound("shake", "/sfx/shake.mp3");
-        k.loadSound("count", "/sfx/count.mp3");
+    k.scene("game", ({ currentTheme }) => {
 
         // Game state
         let gameState = "countdown";
@@ -129,6 +111,7 @@ export function registerGame() {
         let paddleSpeedMul = 1;
         let aiSpeedMul = 1;
 
+
         // Set background
         const bgwidth = 1366;
         const bg1 = k.add([
@@ -217,7 +200,7 @@ export function registerGame() {
                 );
 
                 score.isScoring = false;
-            })
+            });
         };
 
 

@@ -93,7 +93,7 @@ export function registerMenu() {
       k.area()
     ]);
     makeButton(playButton, () => {
-      k.go("game")
+      k.go("loading")
     });
 
     // Tutorial button
