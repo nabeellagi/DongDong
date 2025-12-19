@@ -1,5 +1,5 @@
 /**
- * @function formatTime
+ * Format time to string for countdown
  * @param {number} seconds 
  * @returns formatted MM:SS
  */

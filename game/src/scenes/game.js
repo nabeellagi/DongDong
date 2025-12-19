@@ -8,6 +8,7 @@ import { formatTime } from "../utils/formatTime";
 import { spawnTrail } from "../utils/spawnTrail";
 import { pauseScreen } from "../utils/pauseScreen";
 import { theme } from "../core/data/theme";
+import { collectThemeAssets } from "../utils/collectThemeAssets";
 
 /**
  * Main game loop.
@@ -20,11 +21,26 @@ export function registerGame() {
 
         // ===== THEME SELECT =====
         const currentTheme = theme[Math.floor(Math.random() * theme.length)];
-        // const currentTheme = theme[2];
+
+        // ===== LOAD ASSETS =====
+        const core_assets = {
+            menu: "/menu/menu.png",
+        }
+        loadAll(core_assets);
+        const assets = collectThemeAssets(currentTheme);
+        loadAll(assets);
+
+        k.loadSound("slap", "/sfx/slap.wav");
+        k.loadSound("heavyimpact", "/sfx/heavyimpact2.wav");
+        k.loadSound("whistle", "/sfx/whistle.mp3");
+        k.loadSound("bounce1", "/sfx/bounce1.mp3");
+        k.loadSound("shake", "/sfx/shake.mp3");
+        k.loadSound("count", "/sfx/count.mp3");
 
         // Game state
         let gameState = "countdown";
         let pauseUI = null;
+        let gravityMode = false; // Secret mode
 
         // Countdown
         let countdown = 3;
@@ -62,6 +78,9 @@ export function registerGame() {
             });
         };
         const startCountdown = () => {
+            k.play("count", {
+                volume: 0.7
+            });
             animateCountdown("3");
             k.wait(1, () => animateCountdown("2"));
             k.wait(2, () => animateCountdown("1"));
@@ -110,31 +129,6 @@ export function registerGame() {
         let paddleSpeedMul = 1;
         let aiSpeedMul = 1;
 
-        // ===== LOAD ASSETS =====
-        const assets = {
-            // BACKGROUND
-            brick: "/game/brick1.png",
-            wave : "/game/wave.png",
-            circ : "/game/circ.png",
-            sprink : "/game/sprink.png",
-
-            menu : "/menu/menu.png",
-
-            // PADDLE SKIN
-            capybara : "/sprites/paddleskin/c.png",
-            whale : "/sprites/paddleskin/w.png",
-            frog : "/sprites/paddleskin/f.png",
-            axolotl : "/sprites/paddleskin/a.png",
-            
-        }
-        loadAll(assets);
-
-        k.loadSound("slap", "/sfx/slap.wav");
-        k.loadSound("heavyimpact", "/sfx/heavyimpact2.wav");
-        k.loadSound("whistle", "/sfx/whistle.mp3");
-        k.loadSound("bounce1", "/sfx/bounce1.mp3");
-        k.loadSound("shake", "/sfx/shake.mp3");
-
         // Set background
         const bgwidth = 1366;
         const bg1 = k.add([
@@ -150,7 +144,7 @@ export function registerGame() {
         ]);
 
         // Set Paddle
-        const playerPaddle = paddle(30, k.height() / 2, currentTheme.paddleSprite, 1, "playerPaddle", );
+        const playerPaddle = paddle(30, k.height() / 2, currentTheme.paddleSprite, 1, "playerPaddle",);
         const oppPaddle = paddle(1330, k.height() / 2, currentTheme.paddleSprite, 1, "oppPaddle");
         oppPaddle.flipX = true; // Flip texture for oppPaddle
 
@@ -280,10 +274,10 @@ export function registerGame() {
                         ease: "power2.out"
                     });
 
-                    const whistle = k.play("whistle", {
-                        seek:1,
-                    });
-                    k.wait(0.8, ()=>whistle.stop());
+                const whistle = k.play("whistle", {
+                    seek: 1,
+                });
+                k.wait(0.8, () => whistle.stop());
             },
             apply: () => {
                 paceLevel++;
@@ -305,12 +299,25 @@ export function registerGame() {
         let speed = 20;
         let accel = 3;
 
+        // ===== PADDLE =====
         // Paddle movement properties
         const paddleMove = {
             accel: 1500,
             maxSpeed: 420,
             friction: 280
         };
+
+        const gravity = {
+            force: 3000,
+            jumpForce: 820,
+            maxFallSpeed: 1400,
+            groundPadding: 50
+        };
+
+        // ADDITIONAL SET UP FOR GRAVITY MODE
+        playerPaddle.velY = 0;
+        playerPaddle.isGrounded = false;
+        const groundY = k.height() - (playerPaddle.height / 2) - gravity.groundPadding;
 
         // Burst prop
         const burstConfig = {
@@ -377,8 +384,8 @@ export function registerGame() {
             });
 
             k.play("heavyimpact", {
-                seek:0.4,
-                volume : 0.8
+                seek: 0.4,
+                volume: 0.8
             });
         }
 
@@ -408,31 +415,56 @@ export function registerGame() {
             const frictionMul = Math.sqrt(paddleSpeedMul); // Pace friction
 
             // Acceleration Input
-            if (k.isKeyDown("up") || k.isKeyDown("w")) {
-                playerPaddle.velY -= paddleMove.accel * paddleSpeedMul * dt;
-            } else if (k.isKeyDown("down") || k.isKeyDown("s")) {
-                playerPaddle.velY += paddleMove.accel * paddleSpeedMul * dt;
+            if (!gravityMode) {
+                // NORMAL MOVEMENTS
+                if (k.isKeyDown("up") || k.isKeyDown("w")) {
+                    playerPaddle.velY -= paddleMove.accel * paddleSpeedMul * dt;
+                } else if (k.isKeyDown("down") || k.isKeyDown("s")) {
+                    playerPaddle.velY += paddleMove.accel * paddleSpeedMul * dt;
+                }
+                else {
+                    // Deceleration
+                    if (playerPaddle.velY > 0) {
+                        playerPaddle.velY -= paddleMove.friction * frictionMul * dt;
+                        if (playerPaddle.velY < 0) playerPaddle.velY = 0;
+                    } else if (playerPaddle.velY < 0) {
+                        playerPaddle.velY += paddleMove.friction * frictionMul * dt;
+                        if (playerPaddle.velY > 0) playerPaddle.velY = 0;
+                    }
+                }
+                // Apply Movement
+                playerPaddle.pos.y += playerPaddle.velY * dt;
+                // Limit MaxSpeed
+                playerPaddle.velY = k.clamp(playerPaddle.velY, -paddleMove.maxSpeed * paddleSpeedMul, paddleMove.maxSpeed * paddleSpeedMul);
+                // Keep in screen
+                playerPaddle.pos.y = k.clamp(
+                    playerPaddle.pos.y,
+                    playerPaddle.height / 2,
+                    k.height() - playerPaddle.height / 2
+                )
             }
-            else {
-                // Deceleration
-                if (playerPaddle.velY > 0) {
-                    playerPaddle.velY -= paddleMove.friction * frictionMul * dt;
-                    if (playerPaddle.velY < 0) playerPaddle.velY = 0;
-                } else if (playerPaddle.velY < 0) {
-                    playerPaddle.velY += paddleMove.friction * frictionMul * dt;
-                    if (playerPaddle.velY > 0) playerPaddle.velY = 0;
+            // GRAVITY MODE
+            if (gravityMode) {
+                // Apply gravity
+                playerPaddle.velY += gravity.force * dt;
+
+                playerPaddle.velY = k.clamp(
+                    playerPaddle.velY,
+                    -Infinity,
+                    gravity.maxFallSpeed
+                );
+
+                playerPaddle.pos.y += playerPaddle.velY * dt;
+
+                // Ground
+                if (playerPaddle.pos.y >= groundY) {
+                    playerPaddle.pos.y = groundY;
+                    playerPaddle.velY = 0;
+                    playerPaddle.isGrounded = true;
+                } else {
+                    playerPaddle.isGrounded = false;
                 }
             }
-            // Apply Movement
-            playerPaddle.pos.y += playerPaddle.velY * dt;
-            // Limit MaxSpeed
-            playerPaddle.velY = k.clamp(playerPaddle.velY, -paddleMove.maxSpeed * paddleSpeedMul, paddleMove.maxSpeed * paddleSpeedMul);
-            // Keep in screen
-            playerPaddle.pos.y = k.clamp(
-                playerPaddle.pos.y,
-                playerPaddle.height / 2,
-                k.height() - playerPaddle.height / 2
-            )
 
             // ==== Ball Movement ====
             // Move the ball
@@ -447,12 +479,12 @@ export function registerGame() {
 
                 k.shake(gameBall.vel.len() / 200);
                 k.play("bounce1", {
-                    volume :  1.5,
-                    speed : k.rand(0.85, 1.2)
+                    volume: 1.5,
+                    speed: k.rand(0.85, 1.2)
                 });
                 k.play("shake", {
                     seek: 0.1,
-                    volume : 0.5
+                    volume: 0.5
                 });
             };
             if (gameBall.pos.y >= k.height() - gameBall.radius) {
@@ -462,12 +494,12 @@ export function registerGame() {
 
                 k.shake(gameBall.vel.len() / 200);
                 k.play("bounce1", {
-                    volume : 1.5,
-                    speed : k.rand(0.85, 1.2)
+                    volume: 1.5,
+                    speed: k.rand(0.85, 1.2)
                 });
                 k.play("shake", {
-                    seek : 0.1, 
-                    volume : 0.5
+                    seek: 0.1,
+                    volume: 0.5
                 });
             };
 
@@ -712,8 +744,8 @@ export function registerGame() {
                 playerBurst.cooldown = false;
             });
             k.play("heavyimpact", {
-                seek : 0.4,
-                volume : 0.8
+                seek: 0.4,
+                volume: 0.8
             })
         };
 
@@ -749,9 +781,9 @@ export function registerGame() {
             particleTouch(gameBall.pos.x, gameBall.pos.y);
 
             k.play("slap", {
-                volume:0.6,
-                speed : k.rand(0.95, 1.1),
-                seek:0.001
+                volume: 0.6,
+                speed: k.rand(0.95, 1.1),
+                seek: 0.001
             });
         });
         gameBall.onCollide("oppPaddle", () => {
@@ -779,15 +811,15 @@ export function registerGame() {
             particleTouch(gameBall.pos.x, gameBall.pos.y);
 
             k.play("slap", {
-                volume: 0.6, 
-                speed : k.rand(0.95, 1.1),
-                seek:0.001
+                volume: 0.6,
+                speed: k.rand(0.95, 1.1),
+                seek: 0.001
             });
         });
 
         // ===== PAUSE =====
         k.onKeyPress('q', () => {
-            if(gameState === "play"){
+            if (gameState === "play") {
                 gameState = "pause";
 
                 pauseUI = pauseScreen({
@@ -799,11 +831,22 @@ export function registerGame() {
                         k.go("menu");
                     }
                 })
-            }else if(gameState === "pause"){
+            } else if (gameState === "pause") {
                 pauseUI?.destroy();
                 pauseUI = null;
                 gameState = "play";
             }
+        });
+
+        // Toggle Gravity Mode
+        k.onKeyPress("g", () => {
+            if (gameState === "countdown") {
+                gravityMode = true;
+            }
+        });
+        k.onKeyPress("up", () => {
+            if (!gravityMode || gameState !== "play") return;
+            playerPaddle.velY = -gravity.jumpForce;
         })
 
     });

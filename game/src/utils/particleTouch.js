@@ -2,10 +2,9 @@ import gsap from "gsap";
 import { k } from "../core/kaplay";
 
 /**
- * @function particleTouch
+ * Spawn particles at specified positions through x and y coordinate. Randomized particles with falling effect
  * @param {number} x - x coordinate
  * @param {number} y - y coordinate
- * @description Spawn particles at specified positions through x and y coordinate. Randomized particles with falling effect
  * @example
  * const mousePosition = mousePos();
  * particleTouch(mousePosition.x, mousePosition.y);

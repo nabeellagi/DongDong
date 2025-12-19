@@ -1,8 +1,8 @@
 import gsap from "gsap";
 
 /**
- * @function bounce
- * @description adding GSAP bounce effect
+ * Adding GSAP bounce effect to kaplay game object
+ * @param {GameObj} obj - Kaplay game object
  */
 export function bounce(obj) {
   const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.2 });
