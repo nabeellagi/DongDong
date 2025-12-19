@@ -9,6 +9,7 @@ import { spawnTrail } from "../utils/spawnTrail";
 import { pauseScreen } from "../utils/pauseScreen";
 import { theme } from "../core/data/theme";
 import { collectThemeAssets } from "../utils/collectThemeAssets";
+import { decoyBall } from "../objects/decoyBall";
 
 /**
  * Main game loop.
@@ -98,8 +99,98 @@ export function registerGame() {
             k.color(currentTheme.color1),
             k.scale(1),
             k.opacity(1),
-            k.z(99)
+            k.z(100)
         ]);
+
+        // ==== DECOY SET UP =====
+        const decoyPhase = {
+            active: false,
+            announced: false,
+            start: 270,   // seconds after match start
+            end: 330,     // seconds after match start
+            balls: [],
+            count: 5,
+        };
+        const decoyText = k.add([
+            k.text("DECOY", {
+                size: 120,
+                font: "steve"
+            }),
+            k.pos(k.width() / 2, k.height() / 2),
+            k.anchor("center"),
+            k.color(currentTheme.color2),
+            k.scale(0),
+            k.opacity(0),
+            k.z(300)
+        ]);
+        const showDecoyText = () => {
+            gsap.killTweensOf(decoyText);
+
+            decoyText.opacity = 1;
+            decoyText.scale = k.vec2(0.2);
+
+            gsap.timeline()
+                .to(decoyText.scale, {
+                    x: 1.25,
+                    y: 1.25,
+                    duration: 0.35,
+                    ease: "back.out(3)"
+                })
+                .to(decoyText.scale, {
+                    x: 1,
+                    y: 1,
+                    duration: 0.4,
+                    ease: "power2.out"
+                })
+                .to(decoyText, {
+                    opacity: 0,
+                    duration: 0.3
+                });
+        };
+        // BLINK EFFECT
+        const blinkOverlay = k.add([
+            k.rect(k.width(), k.height()),
+            k.color(0, 0, 0),
+            k.fixed(),
+            k.opacity(0),
+            k.z(50),
+        ]);
+
+        const blinkScreen = () => {
+            blinkOverlay.opacity = 1;
+            k.wait(0.5, () => blinkOverlay.opacity = 0);
+        };
+        // Decoy Helper
+        const spawnDecoyBalls = (amount = decoyPhase.count) => {
+            for (let i = 0; i < amount; i++) {
+                const b = decoyBall(
+                    k.width() / 2,
+                    k.height() / 2,
+                    currentTheme.color2
+                );
+                b.isFading = false;
+                decoyPhase.balls.push(b);
+            }
+        };
+        const clearDecoyBalls = () => {
+            decoyPhase.balls.forEach(b => {
+                if (!b.exists() || b.isFading) return;
+
+                b.isFading = true;
+
+                gsap.to(b, {
+                    opacity: 0,
+                    duration: 0.4,
+                    ease: "power2.out",
+                    onComplete: () => {
+                        if (b.exists()) b.destroy();
+                    }
+                });
+            });
+
+            decoyPhase.balls.length = 0;
+        };
+
 
         // ===== PACE UP =====
         let paceLevel = 0;
@@ -158,7 +249,8 @@ export function registerGame() {
                 k.pos(k.width() / 2 - 120, 60),
                 k.anchor("center"),
                 k.color(scoreColor.player),
-                k.scale(1)
+                k.scale(1),
+                k.z(100)
             ]),
             opp: k.add([
                 k.text("0", {
@@ -168,7 +260,8 @@ export function registerGame() {
                 k.pos(k.width() / 2 + 110, 60),
                 k.anchor("center"),
                 k.color(scoreColor.opp),
-                k.scale(1)
+                k.scale(1),
+                k.z(100)
             ])
         };
 
@@ -294,7 +387,7 @@ export function registerGame() {
             force: 3000,
             jumpForce: 820,
             maxFallSpeed: 1400,
-            groundPadding: 50
+            groundPadding: 45
         };
 
         // ADDITIONAL SET UP FOR GRAVITY MODE
@@ -486,6 +579,42 @@ export function registerGame() {
                 });
             };
 
+            // Decoy Ball moves
+            for (const b of decoyPhase.balls) {
+                b.pos.x += b.vel.x * dt;
+                b.pos.y += b.vel.y * dt;
+
+                // World bounce
+                if (b.pos.y <= b.radius) {
+                    b.pos.y = b.radius;
+                    b.vel.y *= -1;
+                }
+                if (b.pos.y >= k.height() - b.radius) {
+                    b.pos.y = k.height() - b.radius;
+                    b.vel.y *= -1;
+                }
+
+                if (b.pos.x <= b.radius) {
+                    b.pos.x = b.radius;
+                    b.vel.x *= -1;
+                }
+                if (b.pos.x >= k.width() - b.radius) {
+                    b.pos.x = k.width() - b.radius;
+                    b.vel.x *= -1;
+                }
+
+                // Paddle collision
+                if (b.isColliding(playerPaddle)) {
+                    b.vel.x = Math.abs(b.vel.x);
+                    b.vel.y += playerPaddle.velY * 0.3;
+                }
+                if (b.isColliding(oppPaddle)) {
+                    b.vel.x = -Math.abs(b.vel.x);
+                    b.vel.y += oppPaddle.velY * 0.3;
+                }
+            }
+
+
             // ===== BURST TRAIL =====
             if (gameBall.justBurst) {
                 trailTimer += dt;
@@ -529,12 +658,20 @@ export function registerGame() {
                     score.player++;
                     popScore(scoreText.player);
                     scoreText.player.text = score.player.toString();
+                    if (decoyPhase.active) {
+                        blinkScreen();
+                        spawnDecoyBalls(2);
+                    }
                     resetBallWithDelay(-1);
                 }
                 if (gameBall.pos.x < -limit) {
                     score.opp++;
                     popScore(scoreText.opp);
                     scoreText.opp.text = score.opp.toString();
+                    if (decoyPhase.active) {
+                        blinkScreen();
+                        spawnDecoyBalls(2);
+                    }
                     resetBallWithDelay(1);
                 }
             };
@@ -557,6 +694,27 @@ export function registerGame() {
                     nextPaceTime -= paceInterval;
                     paceAnnounced = false;
                 }
+
+                // DECOY TIMER
+                const elapsed = (6 * 60) - matchTime;
+
+                if (
+                    elapsed >= decoyPhase.start &&
+                    elapsed <= decoyPhase.end
+                ) {
+                    if (!decoyPhase.active) {
+                        decoyPhase.active = true;
+                        blinkScreen();
+                        showDecoyText();
+                        spawnDecoyBalls();
+                    }
+                } else {
+                    if (decoyPhase.active) {
+                        decoyPhase.active = false;
+                        clearDecoyBalls();
+                    }
+                }
+
 
                 // Tense 10 secs
                 if (matchTime <= 10 && matchTime > 0) {
