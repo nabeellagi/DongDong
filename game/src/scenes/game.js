@@ -84,7 +84,7 @@ export function registerGame() {
         startCountdown();
 
         // ===== GAME TIMER STATE =====
-        let matchTime = 6;
+        let matchTime = 6 * 60;
         let isOvertime = false;
         let overtimeCount = 0;
         let matchEnded = false;

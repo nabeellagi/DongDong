@@ -77,7 +77,7 @@ export function scoreScreen({
             ]);
 
             gsap.to(letter.pos, {
-                y: box.pos.y - 190,
+                y: box.pos.y - 160,
                 delay: i * 0.08,
                 duration: 0.8,
                 ease: "bounce.out"
@@ -86,18 +86,49 @@ export function scoreScreen({
     };
     spawnFallingResult(winState);
 
+    // Star
+    const starCount =
+        rank === "S" || rank === "A" ? 3 :
+            rank === "B" || rank === "C" ? 2 : 1;
+    function spawnStars(count) {
+        for (let i = 0; i < count; i++) {
+            const star = box.add([
+                k.text("✦", { size: 60 }),
+                k.pos(-40 + i * 40, 90),
+                k.anchor("center"),
+                k.opacity(0),
+                k.scale(0.4)
+            ]);
+
+            gsap.to(star, {
+                opacity: 1,
+                delay: 0.6 + i * 0.1,
+                duration: 0.3
+            });
+
+            gsap.to(star.scale, {
+                x: 1,
+                y: 1,
+                delay: 0.6 + i * 0.1,
+                duration: 0.4,
+                ease: "back.out(3)"
+            });
+        }
+    };
+    spawnStars(starCount)
+
     // Score
     const scoreText = box.add([
         k.text(`Your score : ${playerScore}`, {
             size: 48,
             font: "steve"
         }),
-        k.pos(0, -40),
+        k.pos(300, -40),
         k.anchor("center"),
         k.opacity(0)
     ]);
 
-    // Rank
+    // RANK TEXT
     const rankText = box.add([
         k.text(`RANK ${rank}`, {
             size: 64,
@@ -109,13 +140,44 @@ export function scoreScreen({
         k.scale(0.5)
     ]);
 
+    const rankPool = ["S", "A", "B", "C", "D"];
+    let rolling = true;
+    const rankRoller = k.loop(0.04, () => {
+        if (!rolling) return;
+        rankText.text = `RANK ${rankPool[Math.floor(Math.random() * rankPool.length)]}`;
+    });
+    k.wait(2, () => {
+        rolling = false;
+        rankRoller.cancel();
+
+        rankText.text = `RANK ${rank}`;
+
+        gsap.to(rankText.scale, {
+            x: 1.3,
+            y: 1.3,
+            duration: 0.25,
+            ease: "power2.out"
+        });
+        gsap.to(rankText.scale, {
+            x:1,
+            y:1,
+            delay: 0.25,
+            ease: "back.out(3)"  
+        });
+        gsap.to(rank, {
+            opacity: 1,
+            duration: 0.2
+        })
+    })
+
+
     // Buttons
     const restartBtn = box.add([
         k.text("RESTART", {
             size: 36,
             font: "steve"
         }),
-        k.pos(0, 120),
+        k.pos(0, 150),
         k.anchor("center"),
         k.area(),
         k.opacity(0),
@@ -127,7 +189,7 @@ export function scoreScreen({
             size: 30,
             font: "steve"
         }),
-        k.pos(0, 170),
+        k.pos(0, 200),
         k.anchor("center"),
         k.opacity(0),
         k.scale(1),
@@ -158,7 +220,20 @@ export function scoreScreen({
         ease: "back.out(2, 8)"
     });
 
-    gsap.to([scoreText, restartBtn, exitBtn], {
+    gsap.to(scoreText, {
+        opacity: 1,
+        duration: 0.4,
+        delay: 0.4
+    });
+
+    gsap.to(scoreText.pos, {
+        x: 0,
+        duration: 0.6,
+        delay: 0.4,
+        ease: "power3.out"
+    });
+
+    gsap.to([restartBtn, exitBtn], {
         opacity: 1,
         delay: 0.2,
         duration: 0.3
@@ -185,3 +260,4 @@ export function scoreScreen({
 
     return { destroy: close };
 }
+
