@@ -10,6 +10,7 @@ import { pauseScreen } from "../utils/pauseScreen";
 import { theme } from "../core/data/theme";
 import { collectThemeAssets } from "../utils/collectThemeAssets";
 import { decoyBall } from "../objects/decoyBall";
+import { scoreScreen } from "../utils/scoreScreen";
 
 /**
  * Main game loop.
@@ -83,7 +84,7 @@ export function registerGame() {
         startCountdown();
 
         // ===== GAME TIMER STATE =====
-        let matchTime = 6 * 60;
+        let matchTime = 6;
         let isOvertime = false;
         let overtimeCount = 0;
         let matchEnded = false;
@@ -107,7 +108,7 @@ export function registerGame() {
             active: false,
             announced: false,
             start: 190,   // seconds after match start
-            end: 310,     // seconds after match start
+            end: 300,     // seconds after match start
             balls: [],
             count: 5,
         };
@@ -710,8 +711,8 @@ export function registerGame() {
             };
             // DECOY AI DISTRACTION
             if (decoyPhase.active) {
-                ai.missChance = baseAI.missChance + 0.2;
-                ai.aimError = baseAI.aimError * 1.8;
+                ai.missChance = baseAI.missChance + 0.4;
+                ai.aimError = baseAI.aimError * 2;
             } else {
                 ai.missChance = baseAI.missChance;
                 ai.aimError = baseAI.aimError;
@@ -824,7 +825,6 @@ export function registerGame() {
                     }
                 }
 
-
                 // Tense 10 secs
                 if (matchTime <= 10 && matchTime > 0) {
                     gsap.to(timerText.scale, {
@@ -860,11 +860,16 @@ export function registerGame() {
                         gameState = "end";
 
                         k.wait(0.3, () => {
-                            if (score.player > score.opp) { // Player Win
-                                alert("win");
-                            } else { // Opp win
-                                alert("lose")
-                            }
+                            scoreScreen({
+                                playerScore: score.player,
+                                aiScore: score.opp,
+                                onRestart: () => {
+                                    k.go("game", { currentTheme });
+                                },
+                                onExit: () => {
+                                    k.go("menu");
+                                }
+                            });
                         })
                     }
                 }
@@ -1035,7 +1040,7 @@ export function registerGame() {
             k.play("slap1", {
                 speed: k.rand(0.95, 1.1),
                 seek: 0.001,
-                volume:2
+                volume: 2
             });
         });
         gameBall.onCollide("oppPaddle", () => {
@@ -1066,7 +1071,7 @@ export function registerGame() {
             k.play("slap2", {
                 speed: k.rand(0.95, 1.1),
                 seek: 0.001,
-                volume:2
+                volume: 2
             });
         });
 
