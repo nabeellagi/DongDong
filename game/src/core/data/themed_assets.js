@@ -9,5 +9,11 @@ export const THEMED_ASSETS = {
     capybara : "/sprites/paddleskin/c.png",
     whale : "/sprites/paddleskin/w.png",
     frog : "/sprites/paddleskin/f.png",
-    axolotl : "/sprites/paddleskin/a.png"
+    axolotl : "/sprites/paddleskin/a.png",
+
+    // Music
+    mus1 : "/mus/mus1.mp3",
+    mus2 : "/mus/mus2.mp3",
+    mus3 : "/mus/mus3.ogg",
+    mus4 : "/mus/mus4.ogg"
 };

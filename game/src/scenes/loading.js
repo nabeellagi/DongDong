@@ -29,11 +29,19 @@ export function registerLoadingScreen() {
         loadAll({
             menu: "/menu/menu.png",
             checker: "/menu/checker1.png",
+            proudcat: "/sprites/proudcat.png"
         });
 
         const currentTheme = theme[Math.floor(Math.random() * theme.length)];
-        const assets = collectThemeAssets(currentTheme);
-        loadAll(assets);
+        const { sprites, sounds } = collectThemeAssets(currentTheme);
+
+        // Load sprites normally
+        loadAll(sprites);
+
+        // Load BGM via loadSound
+        for (const [key, path] of Object.entries(sounds)) {
+            k.loadSound(key, path);
+        }
 
         // Sounds
         k.loadSound("slap1", "/sfx/pianohit1.wav");
@@ -45,6 +53,8 @@ export function registerLoadingScreen() {
         k.loadSound("shake", "/sfx/shake.mp3");
         k.loadSound("count", "/sfx/count.mp3");
         k.loadSound("blink", "/sfx/blink.mp3");
+        k.loadSound("meow", "/sfx/meow.mp3");
+        k.loadSound("cheer", "/sfx/cheer.mp3")
 
         k.onClick(() => {
             k.audioCtx?.resume();

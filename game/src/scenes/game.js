@@ -20,7 +20,6 @@ import { scoreScreen } from "../utils/scoreScreen";
 
 export function registerGame() {
     k.scene("game", ({ currentTheme }) => {
-
         // Game state
         let gameState = "countdown";
         let pauseUI = null;
@@ -433,6 +432,10 @@ export function registerGame() {
             apply: () => {
                 paceLevel++;
 
+                if (bgm) {
+                    bgm.speed = 1 + paceLevel * 0.06;
+                };
+
                 // Paddle scaling
                 paddleSizeMul *= 0.9;
                 paddleSpeedMul += 0.12;
@@ -470,6 +473,8 @@ export function registerGame() {
             maxFallSpeed: 1400,
             groundPadding: 45
         };
+        const worldBottomY = () => (k.height() - gravity.groundPadding);
+
 
         // ADDITIONAL SET UP FOR GRAVITY MODE
         playerPaddle.velY = 0;
@@ -555,6 +560,46 @@ export function registerGame() {
             const time = (targetX - ball.pos.x) / ball.vel.x;
             if (time < 0) return null; // ball moving awa
             return ball.pos.y + ball.vel.y * time;
+        }
+
+        // Bgm
+        const bgm = k.play(currentTheme.bgm, {
+            volume: 0.5,
+            loop: true,
+            speed: 1
+        });
+
+        // ===== Proud Cat UwU =====
+        const spawnProudCat = () => {
+            const cat = k.add([
+                k.sprite("proudcat"),
+                k.pos(k.width() / 2, -80),
+                k.anchor("center"),
+                k.scale(2.5),
+                k.opacity(1),
+                k.z(250),
+            ]);
+            gsap.timeline({
+                onComplete: () => cat.destroy()
+            })
+                .to(cat.pos, {
+                    y: k.height() / 2,
+                    duration: 0.6,
+                    ease: "power2.out",
+                    onComplete: () => k.play("meow")
+                })
+                .to(cat.pos, {
+                    y: k.height() / 2 - 60,
+                    duration: 0.25,
+                    ease: "power2.out",
+                    yoyo: true,
+                    repeat: 1
+                })
+                .to(cat, {
+                    opacity: 0,
+                    duration: 0.4,
+                    ease: "power2.out"
+                });
         }
 
         k.onUpdate(() => {
@@ -657,15 +702,16 @@ export function registerGame() {
                     volume: 0.3
                 });
             };
-            if (gameBall.pos.y >= k.height() - gameBall.radius) {
+            const bottomLimit = worldBottomY() - gameBall.radius;
 
-                gameBall.pos.y = k.height() - gameBall.radius;
+            if (gameBall.pos.y >= bottomLimit) {
+                gameBall.pos.y = bottomLimit;
+
                 gameBall.vel.y *= k.rand(-1.25, -1.02);
                 gameBall.vel.y += k.rand(-40, 40);
 
                 k.shake(gameBall.vel.len() / 200);
                 k.play("bounce1", {
-                    volume: 1.5,
                     speed: k.rand(0.85, 1.2),
                     volume: 0.45
                 });
@@ -773,6 +819,7 @@ export function registerGame() {
                         spawnDecoyBalls(2);
                     }
                     resetBallWithDelay(-1);
+                    spawnProudCat();
                 }
                 if (gameBall.pos.x < -limit) {
                     score.opp++;
@@ -856,10 +903,14 @@ export function registerGame() {
                             }
                         );
                     } else { // MATCH ENDS!
+                        bgm?.stop();
                         matchEnded = true;
                         gameState = "end";
 
                         k.wait(0.3, () => {
+                            k.play("cheer", {
+                                volume: 0.6
+                            })
                             scoreScreen({
                                 playerScore: score.player,
                                 aiScore: score.opp,
@@ -1106,7 +1157,9 @@ export function registerGame() {
         k.onKeyPress("up", () => {
             if (!gravityMode || gameState !== "play") return;
             playerPaddle.velY = -gravity.jumpForce;
+        });
+        k.onSceneLeave(() => {
+            bgm?.stop();
         })
-
     });
 }

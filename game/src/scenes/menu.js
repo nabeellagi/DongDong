@@ -34,6 +34,11 @@ export function registerMenu() {
 
     // Load sound
     k.loadSound("click1", "/sfx/click1.ogg");
+    k.loadSound("menubgm", "/mus/menu.ogg");
+    const menubgm = k.play("menubgm", {
+      volume:0.7,
+      loop:true
+    });
 
     // Particle Touch Effect
     k.onMousePress((pos) => {
@@ -93,7 +98,8 @@ export function registerMenu() {
       k.area()
     ]);
     makeButton(playButton, () => {
-      k.go("loading")
+      menubgm?.stop();
+      k.go("loading");
     });
 
     // Tutorial button

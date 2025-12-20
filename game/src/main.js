@@ -8,6 +8,6 @@ registerMenu();
 registerGame();
 registerLoadingScreen();
 
-// k.go('menu');
+k.go('menu');
 // k.go('game')
-k.go("loading");
+// k.go("loading");
