@@ -14,7 +14,7 @@ export function decoyBall(x, y, color) {
             ),
             isDecoy: true,
         },
-        k.opacity(0.8)
+        k.opacity(0.7)
     ]);
 
     return b;

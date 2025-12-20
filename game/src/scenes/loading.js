@@ -36,12 +36,15 @@ export function registerLoadingScreen() {
         loadAll(assets);
 
         // Sounds
-        k.loadSound("slap", "/sfx/slap.wav");
+        k.loadSound("slap1", "/sfx/pianohit1.wav");
+        k.loadSound("slap2", "/sfx/pianohit2.wav");
+
         k.loadSound("heavyimpact", "/sfx/heavyimpact2.wav");
         k.loadSound("whistle", "/sfx/whistle.mp3");
         k.loadSound("bounce1", "/sfx/bounce1.mp3");
         k.loadSound("shake", "/sfx/shake.mp3");
         k.loadSound("count", "/sfx/count.mp3");
+        k.loadSound("blink", "/sfx/blink.mp3");
 
         k.onClick(() => {
             k.audioCtx?.resume();

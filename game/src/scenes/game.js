@@ -62,7 +62,7 @@ export function registerGame() {
         };
         const startCountdown = () => {
             k.play("count", {
-                volume: 0.7
+                volume: 0.6
             });
             animateCountdown("3");
             k.wait(1, () => animateCountdown("2"));
@@ -106,8 +106,8 @@ export function registerGame() {
         const decoyPhase = {
             active: false,
             announced: false,
-            start: 270,   // seconds after match start
-            end: 330,     // seconds after match start
+            start: 190,   // seconds after match start
+            end: 310,     // seconds after match start
             balls: [],
             count: 5,
         };
@@ -158,6 +158,9 @@ export function registerGame() {
 
         const blinkScreen = () => {
             blinkOverlay.opacity = 1;
+            k.play("blink", {
+                volume: 0.8
+            });
             k.wait(0.5, () => blinkOverlay.opacity = 0);
         };
         // Decoy Helper
@@ -227,6 +230,11 @@ export function registerGame() {
 
         // Set ball
         const gameBall = ball(k.width() / 2, k.height() / 2, currentTheme.color2);
+        const ballPace = {
+            speedMul: 1,
+            bounceMul: 1,
+            randomnessMul: 1
+        };
 
         // ===== SCORE SYSTEM =====
         let score = {
@@ -265,16 +273,81 @@ export function registerGame() {
             ])
         };
 
+        // gsap.fromTo(textObj.scale,
+        //     { x: 0.6, y: 0.6 },
+        //     {
+        //         x: 1,
+        //         y: 1,
+        //         duration: 0.4,
+        //         ease: "back.out(3)"
+        //     }
+        // )
         const popScore = (textObj) => {
-            gsap.fromTo(textObj.scale,
-                { x: 0.6, y: 0.6 },
-                {
+            gsap.killTweensOf(textObj);
+            gsap.killTweensOf(textObj.scale);
+            gsap.killTweensOf(textObj.pos);
+
+            const baseY = textObj.pos.y;
+
+            // Safety reset
+            textObj.scale.x = 1;
+            textObj.scale.y = 1;
+
+            gsap.timeline()
+
+                .to(textObj.scale, {
+                    x: 1.12,
+                    y: 0.88,
+                    duration: 0.1,
+                    ease: "power1.out"
+                })
+
+                .to(textObj.pos, {
+                    y: baseY - 32,
+                    duration: 0.3,
+                    ease: "power1.out"
+                }, "<")
+                .to(textObj.scale, {
+                    x: 0.95,
+                    y: 1.15,
+                    duration: 0.3,
+                    ease: "power1.out"
+                }, "<")
+
+                .to(textObj.scale, {
+                    x: 0.05,
+                    duration: 0.08,
+                    ease: "power1.in"
+                }, "<+0.12")
+                .to(textObj.scale, {
+                    x: -1.05,
+                    duration: 0.1,
+                    ease: "power1.out"
+                })
+                .to(textObj.scale, {
+                    x: 1,
+                    duration: 0.12,
+                    ease: "power1.out"
+                })
+
+                .to(textObj.pos, {
+                    y: baseY,
+                    duration: 0.28,
+                    ease: "bounce.out"
+                })
+
+                .to(textObj.scale, {
+                    x: 1.08,
+                    y: 0.92,
+                    duration: 0.1,
+                    ease: "power1.out"
+                }, "<")
+                .to(textObj.scale, {
                     x: 1,
                     y: 1,
-                    duration: 0.4,
-                    ease: "back.out(3)"
-                }
-            )
+                    duration: 0.18,
+                    ease: "elastic.out(1, 0.4)"
+                });
         };
 
         // Ball reset function
@@ -352,19 +425,26 @@ export function registerGame() {
 
                 const whistle = k.play("whistle", {
                     seek: 1,
+                    volume: 0.4
                 });
                 k.wait(0.8, () => whistle.stop());
             },
             apply: () => {
                 paceLevel++;
 
+                // Paddle scaling
                 paddleSizeMul *= 0.9;
-
                 paddleSpeedMul += 0.12;
                 aiSpeedMul += 0.12;
 
                 playerPaddle.scale.y = paddleSizeMul;
                 oppPaddle.scale.y = paddleSizeMul;
+
+                // Ball scaling
+                ballPace.speedMul += 0.06;
+                ballPace.bounceMul += 0.08;
+                ballPace.randomnessMul += 0.05;
+
             }
         }
 
@@ -415,6 +495,10 @@ export function registerGame() {
             deadZone: 25,
             missChance: 0.3
         }
+        const baseAI = { // for decoys
+            missChance: ai.missChance,
+            aimError: ai.aimError
+        };
         let aiTimer = 0;
         let aiTargetY = k.height() / 2;
 
@@ -461,7 +545,7 @@ export function registerGame() {
 
             k.play("heavyimpact", {
                 seek: 0.4,
-                volume: 0.8
+                volume: 0.2
             });
         }
 
@@ -550,20 +634,30 @@ export function registerGame() {
             // Bounce to wall
             if (gameBall.pos.y <= gameBall.radius) {
                 gameBall.pos.y = gameBall.radius;
-                gameBall.vel.y *= k.rand(-1.25, -1.02);
-                gameBall.vel.y += k.rand(-40, 40);
+                const bounceEnergy = k.rand(
+                    1.05,
+                    1.15 + (ballPace.bounceMul - 1) * 0.4
+                );
+
+                gameBall.vel.y *= -bounceEnergy;
+                gameBall.vel.y += k.rand(
+                    -40 * ballPace.randomnessMul,
+                    40 * ballPace.randomnessMul
+                )
 
                 k.shake(gameBall.vel.len() / 200);
                 k.play("bounce1", {
                     volume: 1.5,
-                    speed: k.rand(0.85, 1.2)
+                    speed: k.rand(0.85, 1.2),
+                    volume: 0.45
                 });
                 k.play("shake", {
                     seek: 0.1,
-                    volume: 0.5
+                    volume: 0.3
                 });
             };
             if (gameBall.pos.y >= k.height() - gameBall.radius) {
+
                 gameBall.pos.y = k.height() - gameBall.radius;
                 gameBall.vel.y *= k.rand(-1.25, -1.02);
                 gameBall.vel.y += k.rand(-40, 40);
@@ -571,11 +665,12 @@ export function registerGame() {
                 k.shake(gameBall.vel.len() / 200);
                 k.play("bounce1", {
                     volume: 1.5,
-                    speed: k.rand(0.85, 1.2)
+                    speed: k.rand(0.85, 1.2),
+                    volume: 0.45
                 });
                 k.play("shake", {
                     seek: 0.1,
-                    volume: 0.5
+                    volume: 0.3
                 });
             };
 
@@ -612,8 +707,15 @@ export function registerGame() {
                     b.vel.x = -Math.abs(b.vel.x);
                     b.vel.y += oppPaddle.velY * 0.3;
                 }
+            };
+            // DECOY AI DISTRACTION
+            if (decoyPhase.active) {
+                ai.missChance = baseAI.missChance + 0.2;
+                ai.aimError = baseAI.aimError * 1.8;
+            } else {
+                ai.missChance = baseAI.missChance;
+                ai.aimError = baseAI.aimError;
             }
-
 
             // ===== BURST TRAIL =====
             if (gameBall.justBurst) {
@@ -628,7 +730,7 @@ export function registerGame() {
             }
 
             // ==== BALL SPEED ====
-            const normalMaxSpeed = 800;
+            const normalMaxSpeed = 800 * ballPace.speedMul;
             const ballSpeed = gameBall.vel.len();
             let currentMaxSpeed = normalMaxSpeed;
 
@@ -639,6 +741,13 @@ export function registerGame() {
             if (ballSpeed > currentMaxSpeed) {
                 gameBall.vel = gameBall.vel.unit().scale(currentMaxSpeed);
             }
+
+            const maxVerticalRatio = 0.9;
+            gameBall.vel.y = k.clamp(
+                gameBall.vel.y,
+                -currentMaxSpeed * maxVerticalRatio,
+                currentMaxSpeed * maxVerticalRatio
+            );
 
             if (gameBall.justBurst) {
                 gameBall.burstTimer -= dt;
@@ -847,6 +956,7 @@ export function registerGame() {
             cooldown: false
         };
         const activateBurst = () => {
+
             playerBurst.active = true;
             playerBurst.cooldown = true;
 
@@ -886,7 +996,7 @@ export function registerGame() {
             });
             k.play("heavyimpact", {
                 seek: 0.4,
-                volume: 0.8
+                volume: 0.2
             })
         };
 
@@ -916,15 +1026,16 @@ export function registerGame() {
                 gameBall.burstTimer = 0.25;
             }
             else {
-                gameBall.vel.x *= k.rand(-1.25, -1.02);
-                gameBall.vel.y += playerPaddle.velY * 0.35;
+                const retention = 1 + (ballPace.bounceMul - 1) * 0.15;
+                gameBall.vel.x *= k.rand(-1.1, -1.02) * retention;
+                gameBall.vel.y += playerPaddle.velY * (0.35 + paceLevel * 0.02);
             }
             particleTouch(gameBall.pos.x, gameBall.pos.y);
 
-            k.play("slap", {
-                volume: 0.6,
+            k.play("slap1", {
                 speed: k.rand(0.95, 1.1),
-                seek: 0.001
+                seek: 0.001,
+                volume:2
             });
         });
         gameBall.onCollide("oppPaddle", () => {
@@ -945,16 +1056,17 @@ export function registerGame() {
                 gameBall.justBurst = true;
                 gameBall.burstTimer = 0.25;
             } else {
-                gameBall.vel.x *= k.rand(-1.25, -1.02);
-                gameBall.vel.y += oppPaddle.velY * 0.35;
+                const retention = 1 + (ballPace.bounceMul - 1) * 0.15;
+                gameBall.vel.x *= k.rand(-1.1, -1.02) * retention;
+                gameBall.vel.y += oppPaddle.velY * (0.35 + paceLevel * 0.02);
             }
 
             particleTouch(gameBall.pos.x, gameBall.pos.y);
 
-            k.play("slap", {
-                volume: 0.6,
+            k.play("slap2", {
                 speed: k.rand(0.95, 1.1),
-                seek: 0.001
+                seek: 0.001,
+                volume:2
             });
         });
 
@@ -982,6 +1094,7 @@ export function registerGame() {
         // Toggle Gravity Mode
         k.onKeyPress("g", () => {
             if (gameState === "countdown") {
+                blinkScreen();
                 gravityMode = true;
             }
         });
