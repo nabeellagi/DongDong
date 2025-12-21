@@ -1,19 +1,14 @@
-import { theme } from "../core/data/theme";
-import { k } from "../core/kaplay"
+import { k } from "../core/kaplay";
 import { bounce } from "../utils/bounce";
-import { collectThemeAssets } from "../utils/collectThemeAssets";
-import { loadAll } from "../utils/loadAll";
 
 export function registerLoadingScreen() {
-    k.scene("loading", async () => {
-        // Set background
-        const bgwidth = 1620;
-        const bg1 = k.add([
+    k.scene("loading", () => {
+
+        k.add([
             k.sprite("checker"),
             k.pos(0, 0),
         ]);
 
-        // Loading text
         const loadText = k.add([
             k.text("Loading...", {
                 font: "steve",
@@ -22,51 +17,20 @@ export function registerLoadingScreen() {
             k.anchor("center"),
             k.pos(k.width() / 2, k.height() / 2),
             k.color("#410a00"),
-            k.scale(1)
+            k.scale(1),
         ]);
+
         bounce(loadText);
-
-        loadAll({
-            menu: "/menu/menu.png",
-            checker: "/menu/checker1.png",
-            proudcat: "/sprites/proudcat.png"
-        });
-
-        const currentTheme = theme[Math.floor(Math.random() * theme.length)];
-        const { sprites, sounds } = collectThemeAssets(currentTheme);
-
-        // Load sprites normally
-        loadAll(sprites);
-
-        // Load BGM via loadSound
-        for (const [key, path] of Object.entries(sounds)) {
-            k.loadSound(key, path);
-        }
-
-        // Sounds
-        k.loadSound("slap1", "/sfx/pianohit1.wav");
-        k.loadSound("slap2", "/sfx/pianohit2.wav");
-
-        k.loadSound("heavyimpact", "/sfx/heavyimpact2.wav");
-        k.loadSound("whistle", "/sfx/whistle.mp3");
-        k.loadSound("bounce1", "/sfx/bounce1.mp3");
-        k.loadSound("shake", "/sfx/shake.mp3");
-        k.loadSound("count", "/sfx/count.mp3");
-        k.loadSound("blink", "/sfx/blink.mp3");
-        k.loadSound("meow", "/sfx/meow.mp3");
-        k.loadSound("cheer", "/sfx/cheer.mp3")
 
         k.onClick(() => {
             k.audioCtx?.resume();
         });
 
-        await k.loadRoot;
-
-        loadText.text = "Ready!";
-
-        k.wait(1, () => {
-            k.go("game", { currentTheme })
-        }
-        );
-    })
-};
+        k.wait(2, () => {
+            loadText.text = "Ready!";
+            k.wait(0.5, () => {
+                k.go("game");
+            });
+        });
+    });
+}

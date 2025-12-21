@@ -21,22 +21,22 @@ export function registerMenu() {
   k.scene("menu", () => {
     // Load assets
     const assets = {
-      arcadeframe: "/menu/arcadeframe.png",
-      d: "/menu/logo/d.png",
-      o: "/menu/logo/o.png",
-      n: "/menu/logo/n.png",
-      g: "/menu/logo/g.png",
-      glasspattern: "/menu/glasspattern.png",
-      start: "/menu/Start.png",
-      tutorial: "/menu/Tutorial.png",
-      credits: "/menu/Credits.png",
-      checker: "/menu/checker1.png",
+      arcadeframe: "menu/arcadeframe.png",
+      d: "menu/logo/d.png",
+      o: "menu/logo/o.png",
+      n: "menu/logo/n.png",
+      g: "menu/logo/g.png",
+      glasspattern: "menu/glasspattern.png",
+      start: "menu/Start.png",
+      tutorial: "menu/Tutorial.png",
+      credits: "menu/Credits.png",
+      checker: "menu/checker1.png",
     };
     loadAll(assets);
 
     // Load sound
-    k.loadSound("click1", "/sfx/click1.ogg");
-    k.loadSound("menubgm", "/mus/menu.ogg");
+    k.loadSound("click1", "sfx/click1.ogg");
+    k.loadSound("menubgm", "mus/menu.ogg");
 
     if (!menubgm) {
       menubgm = k.play("menubgm", {

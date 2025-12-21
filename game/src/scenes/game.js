@@ -8,7 +8,6 @@ import { formatTime } from "../utils/formatTime";
 import { spawnTrail } from "../utils/spawnTrail";
 import { pauseScreen } from "../utils/pauseScreen";
 import { theme } from "../core/data/theme";
-import { collectThemeAssets } from "../utils/collectThemeAssets";
 import { decoyBall } from "../objects/decoyBall";
 import { scoreScreen } from "../utils/scoreScreen";
 
@@ -19,7 +18,8 @@ import { scoreScreen } from "../utils/scoreScreen";
  */
 
 export function registerGame() {
-    k.scene("game", ({ currentTheme }) => {
+    k.scene("game", () => {
+        const currentTheme = theme[Math.floor(Math.random() * theme.length)];
         // Game state
         let gameState = "countdown";
         let pauseUI = null;
