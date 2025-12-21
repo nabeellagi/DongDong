@@ -1,4 +1,5 @@
 import { k } from "./core/kaplay";
+import { registerCredit } from "./scenes/credit";
 import { registerGame } from "./scenes/game";
 import { registerLoadingScreen } from "./scenes/loading";
 import { registerMenu } from "./scenes/menu";
@@ -9,6 +10,7 @@ registerMenu();
 registerGame();
 registerLoadingScreen();
 registerTutorial();
+registerCredit();
 
 k.go('menu');
 // k.go('game')

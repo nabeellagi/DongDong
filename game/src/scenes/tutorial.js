@@ -1,5 +1,6 @@
 import gsap from "gsap";
 import { k } from "../core/kaplay"
+import { makeButton } from "../utils/makeButton";
 
 /**
  * Tutorial page
@@ -147,10 +148,10 @@ Try pressing 'g' during the countdown, before the match starts!
             k.pos(80, k.height() - 80),
             k.anchor("left"),
             k.color("#880C31"),
-            k.area()
-        ]).onClick(() => {
-            k.go("menu");
-        });
+            k.area(),
+            k.scale(1)
+        ]);
+        makeButton(returnBtn, () => k.go("menu"));
 
         k.onUpdate(() => {
             const dt = k.dt();
@@ -168,6 +169,9 @@ Try pressing 'g' during the countdown, before the match starts!
 
             title.text = tutoriel[index].title;
             content.text = tutoriel[index].content ?? "";
+            k.play("click1", {
+                volume: 0.4,
+            })
         });
 
         k.onKeyPress("left", () => {
@@ -175,6 +179,9 @@ Try pressing 'g' during the countdown, before the match starts!
 
             title.text = tutoriel[index].title;
             content.text = tutoriel[index].content ?? "";
+            k.play("click1", {
+                volume: 0.4,
+            })
         });
 
 

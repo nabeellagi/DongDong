@@ -103,7 +103,10 @@ export function registerMenu() {
       k.area()
     ]);
     makeButton(playButton, () => {
-      menubgm?.stop();
+      if (menubgm) {
+        menubgm.stop();
+        menubgm = null;
+      }
       k.go("loading");
     });
 
@@ -125,7 +128,9 @@ export function registerMenu() {
       k.pos(932, 390),
       k.area()
     ]);
-    makeButton(creditsButton);
+    makeButton(creditsButton, () => {
+      k.go("credit")
+    });
 
     // Update Loop
     const speed = 60; // Bg scroll speed
