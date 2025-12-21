@@ -16,3 +16,4 @@ k.canvas.style.imageRendering = "crisp-edges";
 
 // Load font
 k.loadFont("steve", "fonts/Steve.ttf");
+k.loadFont("silver", "fonts/Silver.ttf");

@@ -15,6 +15,8 @@ import { bounce } from "../utils/bounce";
  * registerMenu();
  */
 
+let menubgm = null;
+
 export function registerMenu() {
   k.scene("menu", () => {
     // Load assets
@@ -35,10 +37,13 @@ export function registerMenu() {
     // Load sound
     k.loadSound("click1", "/sfx/click1.ogg");
     k.loadSound("menubgm", "/mus/menu.ogg");
-    const menubgm = k.play("menubgm", {
-      volume:0.7,
-      loop:true
-    });
+
+    if (!menubgm) {
+      menubgm = k.play("menubgm", {
+        volume: 0.7,
+        loop: true,
+      });
+    }
 
     // Particle Touch Effect
     k.onMousePress((pos) => {
@@ -46,7 +51,7 @@ export function registerMenu() {
       particleTouch(mousePosition.x, mousePosition.y);
       // Audio
       const clickSnd = k.play("click1", {
-        volume : 0.4,
+        volume: 0.4,
       })
     });
 
@@ -109,7 +114,9 @@ export function registerMenu() {
       k.pos(890, 280),
       k.area()
     ]);
-    makeButton(tutorialButton);
+    makeButton(tutorialButton, () => {
+      k.go("tutorial")
+    });
 
     // Credit button
     const creditsButton = k.add([
